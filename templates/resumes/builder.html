@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resume Builder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+<link rel="stylesheet" href="https://unpkg.com/grapesjs-preset-webpage/dist/grapesjs-preset-webpage.min.css">
+<style>
+    /* Builder Layout */
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .builder-wrapper {
+        display: flex;
+        height: 100vh;
+    }
+
+    .builder-sidebar {
+        width: 280px;
+        background: var(--white);
+        border-right: 1px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+    }
+
+    .builder-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--light-gray);
+    }
+
+    /* Header */
+    .builder-header {
+        height: 64px;
+        background: var(--white);
+        border-bottom: 1px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        align-items: center;
+        padding: 0 1.5rem;
+        justify-content: space-between;
+    }
+
+    .builder-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .builder-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .builder-btn {
+        height: 40px;
+        padding: 0 1.25rem;
+        border-radius: 10px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .builder-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .builder-btn i {
+        font-size: 1.1rem;
+    }
+
+    /* Canvas */
+    .builder-canvas {
+        flex: 1;
+        position: relative;
+    }
+
+    #gjs {
+        height: 100% !important;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    }
+
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(0, 59, 113, 0.1);
+        border-left: 4px solid var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        margin-top: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Mobile Warning */
+    .mobile-warning {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 1rem;
+        background: var(--primary-blue);
+        color: var(--white);
+        text-align: center;
+        z-index: 9999;
+        font-weight: 500;
+    }
+
+    /* Template Modal */
+    .template-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .template-modal .modal-header {
+        background: var(--primary-blue);
+        color: var(--white);
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .template-modal .modal-title {
+        font-weight: 600;
+    }
+
+    .template-modal .modal-body {
+        padding: 2rem;
+    }
+
+    .template-card {
+        background: var(--white);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .template-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .template-preview {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 3/4;
+    }
+
+    .template-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .template-card:hover .template-preview img {
+        transform: scale(1.05);
+    }
+
+    .template-card__body {
+        padding: 1.25rem;
+    }
+
+    .template-card__title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .template-btn {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 10px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .template-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    @media (max-width: 768px) {
+        .mobile-warning {
+            display: block;
+        }
+
+        .builder-sidebar {
+            display: none;
+        }
+
+        .builder-header {
+            padding: 0 1rem;
+        }
+
+        .builder-title {
+            font-size: 1.1rem;
+        }
+
+        .builder-btn {
+            padding: 0 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your resume builder...</div>
+</div>
+
+<div class="mobile-warning">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    For the best experience, please use a desktop device to edit your resume.
+</div>
+
+<div class="builder-wrapper">
+    <aside class="builder-sidebar">
+        <!-- GrapesJS will inject its panels here -->
+    </aside>
+
+    <main class="builder-main">
+        <header class="builder-header">
+            <h1 class="builder-title">Resume Builder</h1>
+            <div class="builder-actions">
+                <button class="builder-btn btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#templateModal">
+                    <i class="fas fa-th-large"></i>
+                    Templates
+                </button>
+                <button class="builder-btn btn btn-primary" id="exportPdf">
+                    <i class="fas fa-download"></i>
+                    Export PDF
+                </button>
+            </div>
+        </header>
+
+        <div class="builder-canvas">
+            <div id="gjs"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Template Modal -->
+<div class="modal fade template-modal" id="templateModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Choose a Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    {% for template in templates %}
+                    <div class="col-md-4">
+                        <div class="template-card">
+                            <div class="template-preview">
+                                <img src="{{ template.preview.url }}" alt="{{ template.name }}" loading="lazy">
+                            </div>
+                            <div class="template-card__body">
+                                <h3 class="template-card__title">{{ template.name }}</h3>
+                                <button class="btn btn-primary template-btn" data-id="{{ template.id }}">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/grapesjs"></script>
+<script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    
+    // Initialize GrapesJS
+    const editor = grapesjs.init({
+        container: '#gjs',
+        height: '100%',
+        width: 'auto',
+        fromElement: false,
+        storageManager: {
+            type: 'remote',
+            autosave: true,
+            stepsBeforeSave: 1,
+            urlStore: '{% url "resume_cv:resume-cv.update.builder" resume.id %}',
+            urlLoad: '{% url "resume_cv:resume-cv.load.builder" resume.id %}',
+            params: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        },
+        plugins: ['gjs-preset-webpage'],
+        pluginsOpts: {
+            'gjs-preset-webpage': {
+                blocksBasicOpts: {
+                    blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image', 'video'],
+                    flexGrid: 1
+                },
+                blocks: ['link-block', 'quote', 'text-basic']
+            }
+        },
+        canvas: {
+            styles: [
+                'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css',
+                '{% static "css/font-awesome.css" %}',
+                '{% static "css/modern.css" %}',
+                '{% static "css/custom.css" %}'
+            ]
+        },
+        panels: {
+            defaults: [
+                {
+                    id: 'basic-actions',
+                    buttons: [
+                        {
+                            id: 'visibility',
+                            active: true,
+                            className: 'btn-toggle-borders',
+                            label: '<i class="fas fa-border-none"></i>',
+                            command: 'sw-visibility'
+                        },
+                        {
+                            id: 'export',
+                            className: 'btn-open-export',
+                            label: '<i class="fas fa-code"></i>',
+                            command: 'export-template'
+                        },
+                        {
+                            id: 'show-json',
+                            className: 'btn-show-json',
+                            label: '<i class="fas fa-file-code"></i>',
+                            command: 'show-json'
+                        },
+                        {
+                            id: 'undo',
+                            className: 'btn-undo',
+                            label: '<i class="fas fa-undo"></i>',
+                            command: 'undo'
+                        },
+                        {
+                            id: 'redo',
+                            className: 'btn-redo',
+                            label: '<i class="fas fa-redo"></i>',
+                            command: 'redo'
+                        }
+                    ]
+                }
+            ]
+        }
+    });
+
+    // Error Handler
+    const handleError = (error) => {
+        console.error('Error:', error);
+        toastr.error('An error occurred. Please try again.');
+        loadingOverlay.style.display = 'none';
+    };
+
+    // Template Loading Function
+    async function loadTemplate(templateId) {
+        try {
+            loadingOverlay.style.display = 'flex';
+            
+            const response = await fetch(`{% url 'resume_cv:load.template' 0 %}`.replace('0', templateId), {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const template = await response.json();
+            
+            if (!template.content || !template.style) {
+                throw new Error('Incomplete template data received');
+            }
+
+            editor.setComponents(template.content);
+            editor.setStyle(template.style);
+
+            const templateModal = bootstrap.Modal.getInstance(document.getElementById('templateModal'));
+            templateModal.hide();
+            
+            toastr.success('Template loaded successfully!');
+        } catch (error) {
+            handleError(error);
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+
+    // Event Listeners
+    editor.on('load', () => {
+        loadingOverlay.style.display = 'none';
+        if (!editor.getHtml() && '{{ resume.template_id }}') {
+            loadTemplate('{{ resume.template_id }}');
+        }
+    });
+
+    // Template Selection
+    document.querySelectorAll('.template-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            loadTemplate(e.target.closest('.template-btn').dataset.id);
+        });
+    });
+
+    // Auto-save Feedback
+    editor.on('storage:start', () => {
+        loadingOverlay.style.display = 'flex';
+    });
+
+    editor.on('storage:end', () => {
+        loadingOverlay.style.display = 'none';
+        toastr.success('Changes saved successfully!');
+    });
+
+    // Error Handling
+    editor.on('storage:error', (err) => {
+        handleError(err);
+    });
+
+    // Export PDF
+    document.getElementById('exportPdf').addEventListener('click', async () => {
+        try {
+            loadingOverlay.style.display = 'flex';
+            
+            const response = await fetch(`{% url 'resume_cv:export.pdf' resume.id %}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resume.pdf';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            toastr.success('Resume exported successfully!');
+        } catch (error) {
+            handleError(error);
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

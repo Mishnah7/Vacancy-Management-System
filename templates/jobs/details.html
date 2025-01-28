@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load is_already_applied %}
+{% load humanize %}
+{% block title %}
+    {{ job.title }} at {{ job.company_name }}
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Hero Section */
+    .job-hero {
+        background: linear-gradient(rgba(0, 59, 113, 0.95), rgba(0, 40, 85, 0.9));
+        padding: 4rem 0;
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .job-hero::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        background: linear-gradient(to bottom right, transparent 49%, var(--white) 50%);
+    }
+
+    .job-hero__container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .job-hero__title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--white);
+    }
+
+    .job-hero__company {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-gold);
+    }
+
+    .job-hero__company a {
+        color: var(--primary-gold);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .job-hero__company a:hover {
+        color: var(--white);
+    }
+
+    .job-hero__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+    }
+
+    .job-hero__meta i {
+        color: var(--primary-gold);
+        margin-right: 0.5rem;
+    }
+
+    /* Content Section */
+    .job-content {
+        padding: 4rem 0;
+        background: var(--white);
+    }
+
+    .job-content__container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .job-content__main {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+    }
+
+    .job-content__section {
+        margin-bottom: 2rem;
+    }
+
+    .job-content__section:last-child {
+        margin-bottom: 0;
+    }
+
+    .job-content__label {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+
+    .job-content__value {
+        font-size: 1.125rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .job-content__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .job-tag {
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .job-tag--type {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-green);
+    }
+
+    .job-tag--posting {
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .job-tag--category {
+        background: rgba(247, 171, 30, 0.1);
+        color: var(--primary-gold);
+    }
+
+    .job-description {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--text-primary);
+    }
+
+    /* Company Sidebar */
+    .company-sidebar {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        position: sticky;
+        top: 2rem;
+    }
+
+    .company-sidebar__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .company-sidebar__description {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .company-sidebar__social {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+        transition: all 0.3s ease;
+    }
+
+    .social-link:hover {
+        background: var(--primary-blue);
+        color: var(--white);
+        transform: translateY(-2px);
+    }
+
+    .apply-button {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .apply-button--applied {
+        background: var(--success-green);
+        border-color: var(--success-green);
+        color: var(--white);
+    }
+
+    .apply-button:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (max-width: 768px) {
+        .job-hero {
+            padding: 3rem 0;
+        }
+
+        .job-hero__title {
+            font-size: 2rem;
+        }
+
+        .job-hero__meta {
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .job-content {
+            padding: 2rem 0;
+        }
+
+        .company-sidebar {
+            margin-top: 2rem;
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="job-hero">
+        <div class="job-hero__container">
+            <h1 class="job-hero__title" data-aos="fade-up">{{ job.title }}</h1>
+            <div class="job-hero__company" data-aos="fade-up" data-aos-delay="100">
+                at <a href="#">{{ job.company_name }}</a>
+            </div>
+            <div class="job-hero__meta" data-aos="fade-up" data-aos-delay="200">
+                <span><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
+                <span><i class="fas fa-clock"></i> Posted {{ job.created_at|timesince }} ago</span>
+                <span><i class="fas fa-calendar-alt"></i> Apply before {{ job.last_date|date }}</span>
+                <span><i class="fas fa-users"></i> {{ job.vacancy }} openings</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Content Section -->
+    <section class="job-content">
+        <div class="job-content__container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="job-content__main" data-aos="fade-up">
+                        <div class="job-content__tags">
+                            {% if job.type == '1' %}
+                                <span class="job-tag job-tag--type">Full Time</span>
+                            {% elif job.type == '2' %}
+                                <span class="job-tag job-tag--type">Part Time</span>
+                            {% else %}
+                                <span class="job-tag job-tag--type">Internship</span>
+                            {% endif %}
+
+                            {% if job.posting_type == 'internal' %}
+                                <span class="job-tag job-tag--posting">Internal Only</span>
+                            {% elif job.posting_type == 'external' %}
+                                <span class="job-tag job-tag--posting">External Only</span>
+                            {% else %}
+                                <span class="job-tag job-tag--posting">Internal & External</span>
+                            {% endif %}
+
+                            <span class="job-tag job-tag--category">{{ job.category }}</span>
+
+                            {% for tag in job.tags.all %}
+                                <span class="job-tag job-tag--category">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="job-content__section">
+                            <div class="job-content__label">Salary</div>
+                            <div class="job-content__value">
+                                {% if job.salary > 0 %}
+                                    {{ job.salary|intcomma }} ETB/Monthly
+                                {% else %}
+                                    Negotiable
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="job-content__section">
+                            <div class="job-content__label">Job Description</div>
+                            <div class="job-description">
+                                {{ job.description|safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="company-sidebar" data-aos="fade-left">
+                        <h3 class="company-sidebar__title">About {{ job.company_name }}</h3>
+                        <div class="company-sidebar__description">
+                            {{ job.company_description|safe }}
+                        </div>
+
+                        <div class="company-sidebar__social">
+                            {% if job.website %}
+                                <a href="{{ job.website }}" class="social-link" target="_blank" data-bs-toggle="tooltip" title="Website">
+                                    <i class="fas fa-globe"></i>
+                                </a>
+                            {% endif %}
+                            <a href="#" class="social-link" data-bs-toggle="tooltip" title="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-link" data-bs-toggle="tooltip" title="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="social-link" data-bs-toggle="tooltip" title="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </div>
+
+                        {% if request.user.is_authenticated and user.role == 'employee' %}
+                            {% is_already_applied job request.user as is_applied %}
+                            {% if is_applied %}
+                                <button class="btn apply-button apply-button--applied" disabled>
+                                    <i class="fas fa-check-circle me-2"></i> Already Applied
+                                </button>
+                            {% else %}
+                                <form action="{% url 'jobs:apply-job' job.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="job" value="{{ job.id }}">
+                                    <button type="submit" class="btn btn-primary apply-button">
+                                        <i class="fas fa-paper-plane me-2"></i> Apply for this Job
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+</script>
+{% endblock %}

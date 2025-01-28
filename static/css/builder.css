@@ -1,0 +1,1 @@
+.builder-top-panel { position: fixed !important; top: 0; left: 0; right: 0; z-index: 99999 !important; background: #f8f9fa; padding: 10px 20px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1); } #gjs { margin-top: 60px !important; } .right-controls button, .right-controls a { z-index: 100000 !important; position: relative; }

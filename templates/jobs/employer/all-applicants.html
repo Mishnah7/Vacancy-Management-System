@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}All Applicants - Berhan Bank VMS{% endblock %}
+
+{% block styles %}
+<style>
+    .page-header {
+        background: var(--white);
+        padding: 2rem 0;
+        border-bottom: 1px solid rgba(0, 59, 113, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .filter-section {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .filter-select {
+        width: 100%;
+        max-width: 300px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 59, 113, 0.2);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        background-color: var(--white);
+    }
+
+    .filter-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary-blue);
+        color: var(--white);
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-button:hover {
+        background: var(--dark-blue);
+        transform: translateY(-2px);
+    }
+
+    .applicant-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(0, 59, 113, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .applicant-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-blue);
+    }
+
+    .applicant-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .applicant-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+    }
+
+    .applicant-name:hover {
+        color: var(--primary-gold);
+    }
+
+    .applicant-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .applicant-status.pending {
+        background: rgba(247, 171, 30, 0.1);
+        color: var(--primary-gold);
+    }
+
+    .applicant-status.accepted {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-green);
+    }
+
+    .applicant-status.rejected {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .applicant-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .meta-item i {
+        color: var(--primary-blue);
+        width: 16px;
+    }
+
+    .applicant-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .skill-tag {
+        padding: 0.35rem 0.75rem;
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .contact-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--primary-blue);
+        color: var(--white);
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .contact-btn:hover {
+        background: var(--dark-blue);
+        transform: translateY(-2px);
+        color: var(--white);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem 0;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+        }
+
+        .filter-section {
+            padding: 1rem;
+        }
+
+        .applicant-meta {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">All applicants who applied for your positions</h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="filter-section" data-aos="fade-up">
+        <div class="d-flex gap-3 align-items-center">
+            <select class="filter-select" id="status-filter">
+                <option value="">Select status</option>
+                <option value="1" {% if request.GET.status == "1" %}selected{% endif %}>Pending</option>
+                <option value="2" {% if request.GET.status == "2" %}selected{% endif %}>Accepted</option>
+                <option value="3" {% if request.GET.status == "3" %}selected{% endif %}>Rejected</option>
+            </select>
+            <button type="button" class="filter-button" id="apply-filter">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </div>
+    </div>
+
+    {% for applicant in applicants %}
+        <div class="applicant-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+            <div class="applicant-header">
+                <div>
+                    <a href="{% url 'jobs:applied-applicant-view' applicant.job.id applicant.id %}" class="applicant-name">
+                        {{ applicant.user.get_full_name }}
+                    </a>
+                    <div class="meta-item">
+                        <i class="fas fa-briefcase"></i>
+                        <span>{{ applicant.job.title }}</span>
+                    </div>
+                </div>
+                <span class="applicant-status {{ applicant.get_status|lower }}">
+                    {{ applicant.get_status }}
+                </span>
+            </div>
+
+            <div class="applicant-meta">
+                <div class="meta-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ applicant.user.email }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Applied {{ applicant.created_at|naturaltime }}</span>
+                </div>
+                {% if applicant.user.profile %}
+                    <div class="meta-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>{{ applicant.user.profile.education }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if applicant.user.profile and applicant.user.profile.tags.exists %}
+                <div class="applicant-skills">
+                    {% for tag in applicant.user.profile.tags.all %}
+                        <span class="skill-tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-end mt-3">
+                <a href="mailto:{{ applicant.user.email }}?Subject=Regarding your application" class="contact-btn">
+                    <i class="fas fa-envelope"></i> Contact
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center py-5" data-aos="fade-up">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h3>No Applications Found</h3>
+            <p class="text-muted">There are no applications matching your criteria.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filter functionality
+    document.getElementById('apply-filter').addEventListener('click', function() {
+        const status = document.getElementById('status-filter').value;
+        if (status) {
+            window.location.href = `?status=${status}`;
+        } else {
+            window.location.href = window.location.pathname;
+        }
+    });
+</script>
+{% endblock %}

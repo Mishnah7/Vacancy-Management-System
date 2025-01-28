@@ -1,0 +1,510 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    Resume Templates
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Hero Section */
+    .templates-hero {
+        background: linear-gradient(rgba(0, 59, 113, 0.95), rgba(0, 40, 85, 0.9));
+        padding: 4rem 0;
+        text-align: center;
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .templates-hero::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        background: linear-gradient(to bottom right, transparent 49%, var(--white) 50%);
+    }
+
+    .templates-hero__title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--white);
+    }
+
+    .templates-hero__subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Categories Section */
+    .categories {
+        padding: 2rem 0;
+        background: var(--white);
+    }
+
+    .categories__container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .categories__list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .category-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 100px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .category-btn.active {
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .category-btn:not(.active) {
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .category-btn:hover:not(.active) {
+        background: rgba(0, 59, 113, 0.15);
+        transform: translateY(-2px);
+    }
+
+    /* Templates Grid */
+    .templates {
+        padding: 3rem 0 5rem;
+        background: var(--light-gray);
+    }
+
+    .templates__container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .template-card {
+        background: var(--white);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .template-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .template-preview {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 3/4;
+    }
+
+    .template-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .template-card:hover .template-preview img {
+        transform: scale(1.05);
+    }
+
+    .premium-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--primary-gold);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .template-card__body {
+        padding: 1.5rem;
+    }
+
+    .template-card__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .template-card__btn {
+        width: 100%;
+        padding: 0.875rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .template-card__btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Preview Modal */
+    .template-preview-modal .modal-dialog {
+        max-width: 90%;
+        margin: 1.75rem auto;
+    }
+
+    .template-preview-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .template-preview-modal .modal-header {
+        background: var(--primary-blue);
+        color: var(--white);
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .template-preview-modal .modal-title {
+        font-weight: 600;
+    }
+
+    .template-preview-modal .close {
+        color: var(--white);
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+    }
+
+    .template-preview-modal .close:hover {
+        opacity: 1;
+    }
+
+    .template-preview-content {
+        padding: 2rem;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .preview-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .preview-actions .btn {
+        padding: 0.875rem 2rem;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .preview-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Create Resume Modal */
+    .create-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .create-modal .modal-header {
+        background: var(--primary-blue);
+        color: var(--white);
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .create-modal .modal-body {
+        padding: 2rem;
+    }
+
+    .create-modal .form-group label {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .create-modal .form-control {
+        height: 48px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        padding: 0 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .create-modal .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    .create-modal .modal-footer {
+        border-top: 1px solid rgba(0, 59, 113, 0.1);
+        padding: 1.5rem;
+    }
+
+    .create-modal .modal-footer .btn {
+        padding: 0.875rem 1.75rem;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+        .templates-hero {
+            padding: 3rem 0;
+        }
+
+        .templates-hero__title {
+            font-size: 2rem;
+        }
+
+        .category-btn {
+            padding: 0.625rem 1.25rem;
+        }
+
+        .templates {
+            padding: 2rem 0 4rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="templates-hero">
+        <div class="container">
+            <h1 class="templates-hero__title" data-aos="fade-up">
+                Professional Resume Templates
+            </h1>
+            <p class="templates-hero__subtitle" data-aos="fade-up" data-aos-delay="100">
+                Choose from our collection of professionally designed templates to create your perfect resume
+            </p>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="categories__container">
+            <div class="categories__list" data-aos="fade-up">
+                <a href="{% url 'resume_cv:templates' %}" 
+                   class="category-btn {% if not request.GET.category %}active{% endif %}">
+                    All Templates
+                </a>
+                {% for category in categories %}
+                    <a href="{% url 'resume_cv:templates' %}?category={{ category.id }}" 
+                       class="category-btn {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Templates Grid -->
+    <section class="templates">
+        <div class="templates__container">
+            <div class="row">
+                {% for template in templates %}
+                    <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+                        <div class="template-card">
+                            <div class="template-preview">
+                                {% if template.thumbnail %}
+                                    <img src="{{ template.thumbnail.url }}" alt="{{ template.name }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'img/featured1.jpg' %}" alt="{{ template.name }}" loading="lazy">
+                                {% endif %}
+                                {% if template.is_premium %}
+                                    <span class="premium-badge">
+                                        <i class="fas fa-crown me-1"></i> Premium
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="template-card__body">
+                                <h3 class="template-card__title">{{ template.name }}</h3>
+                                <button class="btn btn-primary template-card__btn preview-template" 
+                                        data-id="{{ template.id }}">
+                                    <i class="fas fa-eye me-2"></i> Preview Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <img src="{% static 'img/no-results.svg' %}" alt="No templates found" 
+                             class="mb-4" style="max-width: 200px;">
+                        <h3 class="h4 mb-3">No Templates Found</h3>
+                        <p class="text-muted">
+                            We couldn't find any templates matching your criteria. 
+                            Try selecting a different category.
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Template Preview Modal -->
+    <div class="modal fade template-preview-modal" id="previewModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Template Preview</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="template-preview-content" class="template-preview-content">
+                        <!-- Template content will be loaded here -->
+                    </div>
+                    <div class="preview-actions">
+                        <button class="btn btn-primary use-template">
+                            <i class="fas fa-check me-2"></i> Use This Template
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i> Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Resume Modal -->
+    <div class="modal fade create-modal" id="createModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Name Your Resume</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'resume_cv:create' %}" method="post" id="createResumeForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="template" id="template_id_builder">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="name">Resume Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="name" 
+                                   id="page-name"
+                                   required
+                                   placeholder="e.g., My Professional Resume">
+                            <small class="form-text text-muted">
+                                Give your resume a name to easily identify it later
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Create & Continue
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let currentTemplateId = null;
+
+        // Handle template preview
+        const previewButtons = document.querySelectorAll('.preview-template');
+        previewButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const templateId = this.getAttribute('data-id');
+                currentTemplateId = templateId;
+                
+                try {
+                    const response = await fetch(`/template/${templateId}/`);
+                    if (response.ok) {
+                        const template = await response.json();
+                        const previewContent = document.getElementById('template-preview-content');
+                        
+                        // Apply template content and styles
+                        previewContent.innerHTML = template.content;
+                        
+                        // Create or update style element
+                        let styleElement = document.getElementById('template-preview-style');
+                        if (!styleElement) {
+                            styleElement = document.createElement('style');
+                            styleElement.id = 'template-preview-style';
+                            document.head.appendChild(styleElement);
+                        }
+                        styleElement.textContent = template.style;
+                        
+                        // Show preview modal
+                        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+                        previewModal.show();
+                    } else {
+                        toastr.error('Failed to load template preview. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    toastr.error('An error occurred while loading the template. Please try again.');
+                }
+            });
+        });
+
+        // Handle "Use This Template" button click
+        document.querySelector('.use-template').addEventListener('click', function() {
+            if (currentTemplateId) {
+                document.getElementById('template_id_builder').value = currentTemplateId;
+                const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+                previewModal.hide();
+                const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+                createModal.show();
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('createResumeForm').addEventListener('submit', function(e) {
+            if (!currentTemplateId) {
+                e.preventDefault();
+                toastr.warning('Please select a template first.');
+                return;
+            }
+        });
+
+        // Handle modal closing
+        document.getElementById('previewModal').addEventListener('hidden.bs.modal', function() {
+            const styleElement = document.getElementById('template-preview-style');
+            if (styleElement) {
+                styleElement.textContent = '';
+            }
+        });
+    });
+</script>
+{% endblock %}

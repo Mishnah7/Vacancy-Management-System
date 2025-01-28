@@ -1,0 +1,892 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tag_exists %}
+
+{% block title %}Add New Position - Berhan Bank VMS{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'vendor/bootstrap-select/css/bootstrap-select.min.css' %}">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="{% static 'css/select2-bootstrap.css' %}"/>
+<style>
+    .create-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        padding: 3rem 0;
+        color: var(--white);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .create-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 30s linear infinite;
+    }
+
+    @keyframes patternMove {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(-20px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+
+    .form-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+    }
+
+    .form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--primary-gold));
+        border-radius: 16px 0 0 16px;
+    }
+
+    .form-card__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-card__title i {
+        color: var(--primary-blue);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        height: 48px;
+        border-radius: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    textarea.form-control {
+        height: auto;
+        min-height: 120px;
+    }
+
+    .form-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .required-field::after {
+        content: '*';
+        color: #dc3545;
+        margin-left: 4px;
+    }
+
+    .select2-container--bootstrap4 .select2-selection {
+        height: 48px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: 44px;
+        padding-left: 1rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple {
+        min-height: 48px;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 8px;
+        margin: 4px;
+        font-size: 0.9rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 5px;
+        border: none;
+        background: none;
+        opacity: 0.8;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove:hover {
+        opacity: 1;
+        background: none;
+    }
+
+    .select2-container--bootstrap4 .select2-search__field {
+        margin-top: 7px;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--multiple {
+        padding: 3px 6px;
+    }
+
+    .btn-submit {
+        height: 48px;
+        padding: 0 2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+        border: none;
+        border-radius: 12px;
+        color: var(--white);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 59, 113, 0.2);
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: none;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .create-header {
+            padding: 2rem 0;
+        }
+
+        .form-card {
+            padding: 1.5rem;
+        }
+    }
+
+    /* CKEditor Customizations */
+    .ck-editor__editable {
+        min-height: 300px !important;
+        border-radius: 0 0 12px 12px !important;
+    }
+
+    .ck.ck-editor__main>.ck-editor__editable {
+        background: white !important;
+    }
+
+    .ck.ck-editor {
+        border-radius: 12px !important;
+    }
+
+    .ck.ck-toolbar {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 1px solid rgba(0, 59, 113, 0.1) !important;
+    }
+
+    .ck.ck-content {
+        font-size: 14px !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial !important;
+    }
+
+    /* Select2 Custom Styling for Required Skills */
+    .select2-container--bootstrap4.select2-container--skills .select2-selection {
+        min-height: 48px;
+        max-height: 120px;
+        overflow-y: auto;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        padding: 4px;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-selection--multiple {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: flex-start;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-selection__rendered {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-selection__choice {
+        flex: 0 0 auto;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 2px 8px;
+        margin: 2px;
+        font-size: 0.9rem;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-search {
+        flex: 1;
+        min-width: 150px;
+        margin: 2px;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-search__field {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 4px 8px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        font-size: 1rem;
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: none;
+        opacity: 0.8;
+        order: 2;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-selection--multiple .select2-selection__choice__remove:hover {
+        background: none;
+        opacity: 1;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-dropdown {
+        border: 2px solid var(--primary-blue);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 59, 113, 0.1);
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-results__option {
+        padding: 8px 12px;
+        font-size: 0.95rem;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills .select2-results__option--highlighted {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .select2-container--bootstrap4.select2-container--skills.select2-container--focus .select2-selection {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    .skills-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    /* Required Skills Dropdown Styling */
+    .skills-wrapper {
+        position: relative;
+    }
+
+    .skills-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        min-height: 48px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .skills-input:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+        outline: none;
+    }
+
+    .skill-tag {
+        background: var(--primary-blue);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .skill-tag .remove {
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .skill-tag .remove:hover {
+        opacity: 1;
+    }
+
+    .skills-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        background: white;
+        border: 2px solid var(--primary-blue);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 59, 113, 0.1);
+        z-index: 1000;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .skills-dropdown.active {
+        display: block;
+    }
+
+    .skills-search {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 59, 113, 0.1);
+    }
+
+    .skills-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid rgba(0, 59, 113, 0.2);
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .skills-search input:focus {
+        border-color: var(--primary-blue);
+        outline: none;
+    }
+
+    .skills-list {
+        padding: 8px 0;
+    }
+
+    .skill-option {
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .skill-option:hover {
+        background: rgba(0, 59, 113, 0.05);
+    }
+
+    .skill-option.selected {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .skill-option i {
+        opacity: 0.7;
+    }
+
+    .skills-footer {
+        padding: 12px;
+        border-top: 1px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .skills-count {
+        font-size: 0.9rem;
+        color: rgba(0, 0, 0, 0.6);
+    }
+
+    .skills-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .skills-actions button {
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .skills-actions .clear-btn {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .skills-actions .clear-btn:hover {
+        background: rgba(220, 53, 69, 0.2);
+    }
+
+    .skills-actions .apply-btn {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .skills-actions .apply-btn:hover {
+        background: var(--dark-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="create-header">
+    <div class="container">
+        <h1 class="mb-2">Add a new position</h1>
+        <p class="mb-0">Create a new job posting to find the perfect candidate</p>
+    </div>
+</section>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'jobs:employer-jobs-create' %}" class="job-add-form needs-validation" id="job-create-form" novalidate>
+        {% csrf_token %}
+        
+        <!-- Job Details -->
+        <div class="form-card">
+            <h3 class="form-card__title">
+                <i class="fas fa-briefcase"></i>
+                Job Details
+            </h3>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="title" class="form-label required-field">Job Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if form.title.help_text %}
+                            <div class="form-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label required-field">Job Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.description.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if form.description.help_text %}
+                    <div class="form-text">{{ form.description.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="type" class="form-label required-field">Job Type</label>
+                        {{ form.type }}
+                        {% if form.type.help_text %}
+                            <div class="form-text">{{ form.type.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="category" class="form-label required-field">Category</label>
+                        {{ form.category }}
+                        {% if form.category.help_text %}
+                            <div class="form-text">{{ form.category.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="location" class="form-label">Location</label>
+                        {{ form.location }}
+                        {% if form.location.help_text %}
+                            <div class="form-text">{{ form.location.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="salary" class="form-label">Salary</label>
+                        {{ form.salary }}
+                        {% if form.salary.help_text %}
+                            <div class="form-text">{{ form.salary.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="last_date" class="form-label required-field">Last Date to Apply</label>
+                        {{ form.last_date }}
+                        {% if form.last_date.help_text %}
+                            <div class="form-text">{{ form.last_date.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="vacancy" class="form-label required-field">Number of Vacancies</label>
+                        {{ form.vacancy }}
+                        {% if form.vacancy.help_text %}
+                            <div class="form-text">{{ form.vacancy.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="posting_type" class="form-label required-field">Posting Type</label>
+                {{ form.posting_type }}
+                {% if form.posting_type.help_text %}
+                    <div class="form-text">{{ form.posting_type.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="tags" class="form-label">Required Skills</label>
+                {{ form.tags }}
+                {% if form.tags.help_text %}
+                    <div class="form-text">{{ form.tags.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Company Details -->
+        <div class="form-card">
+            <h3 class="form-card__title">
+                <i class="fas fa-building"></i>
+                Company Details
+            </h3>
+            <div class="form-group">
+                <label for="company_name" class="form-label required-field">Company Name</label>
+                {{ form.company_name }}
+                {% if form.company_name.help_text %}
+                    <div class="form-text">{{ form.company_name.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="company_description" class="form-label">Company Description</label>
+                {{ form.company_description }}
+                {% if form.company_description.help_text %}
+                    <div class="form-text">{{ form.company_description.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="website" class="form-label">Company Website</label>
+                {{ form.website }}
+                {% if form.website.help_text %}
+                    <div class="form-text">{{ form.website.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-submit" id="submit-job">
+                <i class="fas fa-plus-circle"></i>
+                Create Position
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize CKEditor
+        const editors = {};
+        
+        // Function to safely initialize editor
+        async function initializeEditor(selector) {
+            const element = document.querySelector(selector);
+            if (!element || element.closest('.ck-editor')) return;
+            
+            try {
+                const editor = await ClassicEditor.create(element, {
+                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
+                    placeholder: selector === '#id_description' ? 'Enter detailed job description...' : 'Enter company description...',
+                    removePlugins: ['MediaEmbed', 'Table', 'TableToolbar'],
+                    height: '300px'
+                });
+                editors[selector] = editor;
+            } catch (error) {
+                console.error(`Error initializing editor for ${selector}:`, error);
+            }
+        }
+
+        // Initialize editors
+        ['#id_description', '#id_company_description'].forEach(selector => {
+            initializeEditor(selector);
+        });
+
+        // Initialize Select2 for all select elements with select2 class
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Initialize datepicker for last_date field
+        $('#id_last_date').attr('min', new Date().toISOString().split('T')[0]);
+
+        // New Required Skills Implementation
+        const skillsWrapper = $('<div class="skills-wrapper"></div>');
+        const skillsInput = $('<div class="skills-input" tabindex="0"></div>');
+        const skillsDropdown = $(`
+            <div class="skills-dropdown">
+                <div class="skills-search">
+                    <input type="text" placeholder="Search skills...">
+                </div>
+                <div class="skills-list"></div>
+                <div class="skills-footer">
+                    <div class="skills-count">0 of 6 skills selected</div>
+                    <div class="skills-actions">
+                        <button class="clear-btn">Clear All</button>
+                        <button class="apply-btn">Apply</button>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        // Replace the original select with our custom implementation
+        const originalSelect = $('#id_tags');
+        originalSelect.hide().after(skillsWrapper);
+        skillsWrapper.append(skillsInput).append(skillsDropdown);
+
+        // Common skills list (you can modify this or load from backend)
+        const commonSkills = [
+            'Team Management', 'Leadership', 'Communication', 'Problem Solving',
+            'Project Management', 'Strategic Planning', 'Data Analysis',
+            'Software Development', 'Marketing', 'Sales', 'Customer Service',
+            'Financial Analysis', 'Research', 'Writing', 'Public Speaking'
+        ];
+
+        let selectedSkills = [];
+
+        function updateSkillsList(searchTerm = '') {
+            const skillsList = skillsDropdown.find('.skills-list');
+            skillsList.empty();
+            
+            const filteredSkills = commonSkills.filter(skill => 
+                skill.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            filteredSkills.forEach(skill => {
+                const isSelected = selectedSkills.includes(skill);
+                const option = $(`
+                    <div class="skill-option ${isSelected ? 'selected' : ''}" data-skill="${skill}">
+                        <i class="fas ${isSelected ? 'fa-check-circle' : 'fa-circle'}"></i>
+                        ${skill}
+                    </div>
+                `);
+                skillsList.append(option);
+            });
+
+            if (searchTerm && !filteredSkills.includes(searchTerm)) {
+                skillsList.append(`
+                    <div class="skill-option" data-skill="${searchTerm}">
+                        <i class="fas fa-plus-circle"></i>
+                        Add "${searchTerm}" as a new skill
+                    </div>
+                `);
+            }
+        }
+
+        function updateSelectedSkills() {
+            skillsInput.empty();
+            selectedSkills.forEach(skill => {
+                skillsInput.append(`
+                    <span class="skill-tag">
+                        ${skill}
+                        <i class="fas fa-times remove" data-skill="${skill}"></i>
+                    </span>
+                `);
+            });
+            
+            if (selectedSkills.length === 0) {
+                skillsInput.append('<span class="placeholder">Select required skills</span>');
+            }
+            
+            skillsDropdown.find('.skills-count').text(`${selectedSkills.length} of 6 skills selected`);
+            originalSelect.val(selectedSkills).trigger('change');
+        }
+
+        // Event Handlers
+        skillsInput.on('click', function() {
+            skillsDropdown.toggleClass('active');
+            updateSkillsList();
+        });
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.skills-wrapper').length) {
+                skillsDropdown.removeClass('active');
+            }
+        });
+
+        skillsDropdown.on('click', '.skill-option', function() {
+            const skill = $(this).data('skill');
+            const index = selectedSkills.indexOf(skill);
+            
+            if (index === -1 && selectedSkills.length < 6) {
+                selectedSkills.push(skill);
+            } else if (index !== -1) {
+                selectedSkills.splice(index, 1);
+            }
+            
+            updateSkillsList(skillsDropdown.find('.skills-search input').val());
+            updateSelectedSkills();
+        });
+
+        skillsInput.on('click', '.remove', function(e) {
+            e.stopPropagation();
+            const skill = $(this).data('skill');
+            selectedSkills = selectedSkills.filter(s => s !== skill);
+            updateSelectedSkills();
+            updateSkillsList();
+        });
+
+        skillsDropdown.find('.skills-search input').on('input', function() {
+            updateSkillsList($(this).val());
+        });
+
+        skillsDropdown.find('.clear-btn').on('click', function() {
+            selectedSkills = [];
+            updateSelectedSkills();
+            updateSkillsList();
+        });
+
+        skillsDropdown.find('.apply-btn').on('click', function() {
+            skillsDropdown.removeClass('active');
+        });
+
+        // Initial setup
+        updateSelectedSkills();
+
+        // Client-side validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Custom validation for description length
+        $('#id_description').on('input', function() {
+            var minLength = 100;
+            var currentLength = $(this).val().length;
+            var feedback = $(this).siblings('.invalid-feedback');
+            
+            if (currentLength < minLength) {
+                $(this).addClass('is-invalid');
+                if (!feedback.length) {
+                    $('<div class="invalid-feedback">Description must be at least ' + minLength + ' characters long (' + (minLength - currentLength) + ' more needed)</div>').insertAfter(this);
+                } else {
+                    feedback.text('Description must be at least ' + minLength + ' characters long (' + (minLength - currentLength) + ' more needed)');
+                }
+            } else {
+                $(this).removeClass('is-invalid');
+                feedback.remove();
+            }
+        });
+
+        // Form submission handling
+        $('#job-create-form').on('submit', function(e) {
+            Object.entries(editors).forEach(([selector, editor]) => {
+                if (editor) {
+                    const content = editor.getData();
+                    if (selector === '#id_description' && content.length < 100) {
+                        e.preventDefault();
+                        alert('Job description must be at least 100 characters long');
+                        return false;
+                    }
+                    $(selector).val(content);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

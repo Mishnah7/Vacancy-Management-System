@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block extrahead %}{{ block.super }}
+<style type="text/css">
+    .results-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .stats-card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .stat-item {
+        margin: 10px 0;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .stat-label {
+        font-weight: bold;
+        color: #666;
+    }
+    .stat-value {
+        float: right;
+        font-size: 1.2em;
+    }
+    .error-list {
+        margin-top: 20px;
+    }
+    .error-item {
+        background: #fff3cd;
+        border-left: 4px solid #2b5797;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    .error-item h4 {
+        margin: 0 0 10px 0;
+        color: #2b5797;
+    }
+    .action-buttons {
+        margin-top: 20px;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:jobsapp_employeeprofile_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% trans 'Import Results' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <h1>{% trans 'Import Results' %}</h1>
+    
+    <div class="stats-card">
+        <h2>Summary</h2>
+        <div class="stat-item">
+            <span class="stat-label">Total Employees</span>
+            <span class="stat-value">{{ total_employees }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Records with Temporary IDs</span>
+            <span class="stat-value">{{ temp_ids }}</span>
+        </div>
+    </div>
+
+    {% if recent_errors %}
+        <div class="stats-card error-list">
+            <h2>Recent Import Errors</h2>
+            {% for error in recent_errors %}
+                <div class="error-item">
+                    <h4>{{ error.employee_name }}</h4>
+                    <p><strong>File No:</strong> {{ error.file_no|default:"N/A" }}</p>
+                    <p><strong>Error Type:</strong> {{ error.error_type }}</p>
+                    <p><strong>Description:</strong> {{ error.error_description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="action-buttons">
+        <a href="{% url 'admin:jobsapp_employeeprofile_changelist' %}" class="button">View All Employees</a>
+        <a href="{% url 'admin:jobsapp_importerror_changelist' %}" class="button">View All Errors</a>
+        <a href="{% url 'admin:import-employees' %}" class="button default">Import More</a>
+    </div>
+</div>
+{% endblock %} 

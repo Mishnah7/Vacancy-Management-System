@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+About Us - Berhan Bank VMS
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Hero Section */
+    .about-hero {
+        background: linear-gradient(135deg, rgba(0, 59, 113, 0.97), rgba(255, 193, 7, 0.95)), url('{% static "img/meeting.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 8rem 0 10rem;
+        position: relative;
+        color: var(--white);
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 30s linear infinite;
+    }
+
+    @keyframes patternMove {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(-20px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+
+    .about-hero::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: linear-gradient(to bottom right, transparent 49%, var(--white) 50%);
+    }
+
+    .about-hero__title {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(45deg, #ffffff, #ffd700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        position: relative;
+        display: inline-block;
+    }
+
+    .about-hero__subtitle {
+        font-size: 1.35rem;
+        opacity: 0.95;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.7;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Content Section */
+    .about-content {
+        padding: 5rem 0;
+        background: var(--white);
+        position: relative;
+    }
+
+    .about-content::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: radial-gradient(circle at top right, rgba(0, 59, 113, 0.03) 0%, transparent 70%),
+                    radial-gradient(circle at bottom left, rgba(255, 193, 7, 0.03) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .about-card {
+        background: var(--white);
+        border-radius: 24px;
+        padding: 3rem;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid rgba(0, 59, 113, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-blue), var(--primary-gold));
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .about-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 59, 113, 0.1);
+    }
+
+    .about-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .about-card__icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        color: var(--white);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        transform: rotate(-5deg);
+        transition: transform 0.3s ease;
+    }
+
+    .about-card:hover .about-card__icon {
+        transform: rotate(0deg) scale(1.1);
+    }
+
+    .about-card__title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+        position: relative;
+    }
+
+    .about-card__text {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .about-card__feature {
+        background: rgba(0, 59, 113, 0.03);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .about-card__feature:hover {
+        background: rgba(0, 59, 113, 0.06);
+        transform: translateY(-5px);
+    }
+
+    /* Stats Section */
+    .stats-section {
+        padding: 6rem 0;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 20s linear infinite alternate;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-item__number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffffff, #ffd700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+
+    .stat-item__label {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Help Card */
+    .help-card {
+        background: var(--white);
+        border-radius: 24px;
+        padding: 3rem;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid rgba(0, 59, 113, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .help-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 59, 113, 0.1);
+    }
+
+    .help-link {
+        display: flex;
+        align-items: center;
+        color: var(--text-primary);
+        text-decoration: none;
+        padding: 1.25rem;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        background: rgba(0, 59, 113, 0.03);
+    }
+
+    .help-link:hover {
+        background: rgba(0, 59, 113, 0.08);
+        color: var(--primary-blue);
+        transform: translateX(10px);
+    }
+
+    .help-link i {
+        margin-right: 1rem;
+        color: var(--primary-blue);
+        font-size: 1.25rem;
+        transition: transform 0.3s ease;
+    }
+
+    .help-link:hover i {
+        transform: scale(1.2);
+    }
+
+    @media (max-width: 991px) {
+        .about-hero {
+            padding: 6rem 0 8rem;
+        }
+
+        .about-hero__title {
+            font-size: 3rem;
+        }
+
+        .stat-item {
+            margin-bottom: 2rem;
+        }
+
+        .about-card,
+        .help-card {
+            margin-bottom: 2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .about-hero__title {
+            font-size: 2.5rem;
+        }
+
+        .about-hero__subtitle {
+            font-size: 1.1rem;
+        }
+
+        .about-card,
+        .help-card {
+            padding: 2rem;
+        }
+
+        .stat-item__number {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <h1 class="about-hero__title" data-aos="zoom-in">About Berhan Bank</h1>
+        <p class="about-hero__subtitle" data-aos="fade-up" data-aos-delay="100">
+            Ethiopia's trusted financial partner, empowering growth and prosperity through innovative banking solutions and career opportunities.
+        </p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="about-content">
+    <div class="container">
+        <div class="row g-4">
+            <!-- About Card -->
+            <div class="col-lg-8" data-aos="fade-up">
+                <div class="about-card">
+                    <div class="about-card__icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h2 class="about-card__title">Our Story</h2>
+                    <p class="about-card__text">
+                        Berhan Bank S.C. was established by 11,200 shareholders with a paid-up capital of Birr 308 million and commenced operations on October 1, 2009. The Bank was officially registered with the National Bank of Ethiopia on July 27, 2009, under the Licensing & Supervision of Banking Business Proclamation No. 592/2008 and the Commercial Code of Ethiopia of 1960. Since then, we have grown to become one of Ethiopia's leading private banks, serving customers through our extensive network of branches nationwide.
+                    </p>
+                    <div class="row g-4">
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                            <div class="about-card__feature">
+                                <i class="fas fa-history fa-2x mb-3 text-primary"></i>
+                                <h4>Our History</h4>
+                                <p>From our founding in 2009, we've consistently grown to become a trusted leader in Ethiopian banking, expanding our services and branch network year after year.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                            <div class="about-card__feature">
+                                <i class="fas fa-bullseye fa-2x mb-3 text-primary"></i>
+                                <h4>Our Mission</h4>
+                                <p>To deliver innovative financial solutions that drive Ethiopia's economic growth while creating value for our stakeholders and communities.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                            <div class="about-card__feature">
+                                <i class="fas fa-handshake fa-2x mb-3 text-primary"></i>
+                                <h4>Our Values</h4>
+                                <p>Excellence, integrity, innovation, customer focus, and social responsibility form the foundation of our operations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help & Support Card -->
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="help-card">
+                    <div class="about-card__icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3 class="about-card__title">Help & Support</h3>
+                    <div class="help-links">
+                        <a href="{% url 'jobs:faq' %}" class="help-link" data-aos="fade-left" data-aos-delay="100">
+                            <i class="fas fa-file-alt"></i>
+                            Frequently Asked Questions
+                        </a>
+                        <a href="{% url 'jobs:support' %}" class="help-link" data-aos="fade-left" data-aos-delay="200">
+                            <i class="fas fa-comments"></i>
+                            Support Center
+                        </a>
+                        <a href="{% url 'jobs:contact' %}" class="help-link" data-aos="fade-left" data-aos-delay="300">
+                            <i class="fas fa-headset"></i>
+                            Contact Us
+                        </a>
+                        <a href="{% static 'docs/career_guide.pdf' %}" class="help-link" data-aos="fade-left" data-aos-delay="400" target="_blank">
+                            <i class="fas fa-book"></i>
+                            Career Guide
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3" data-aos="fade-up">
+                <div class="stat-item">
+                    <div class="stat-item__number" data-count="11200">11,200+</div>
+                    <div class="stat-item__label">Shareholders</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-item">
+                    <div class="stat-item__number">308M</div>
+                    <div class="stat-item__label">Initial Capital (Birr)</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-item">
+                    <div class="stat-item__number">100+</div>
+                    <div class="stat-item__label">Branches</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-item">
+                    <div class="stat-item__number">2500+</div>
+                    <div class="stat-item__label">Employees</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Vision Section -->
+<section class="about-content">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-6" data-aos="fade-up">
+                <div class="about-card">
+                    <div class="about-card__icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h2 class="about-card__title">Our Vision</h2>
+                    <p class="about-card__text">
+                        To be the leading private bank in Ethiopia, recognized for excellence in financial services, technological innovation, and contribution to national development.
+                    </p>
+                    <ul class="list-unstyled mt-4">
+                        <li class="mb-3"><i class="fas fa-check-circle text-primary me-2"></i> Digital Banking Excellence</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-primary me-2"></i> Customer-Centric Solutions</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-primary me-2"></i> Sustainable Growth</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-primary me-2"></i> Community Development</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="about-card">
+                    <div class="about-card__icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h2 class="about-card__title">Career Growth</h2>
+                    <p class="about-card__text">
+                        At Berhan Bank, we believe in nurturing talent and providing opportunities for professional development. Join our team and be part of our journey towards excellence.
+                    </p>
+                    <div class="mt-4">
+                        <a href="{% url 'jobs:jobs' %}" class="btn btn-primary me-3 mb-3">
+                            <i class="fas fa-briefcase me-2"></i>View Open Positions
+                        </a>
+                        <a href="{% url 'resume_cv:templates' %}" class="btn btn-outline-primary mb-3">
+                            <i class="fas fa-file-alt me-2"></i>Create Your Resume
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animate statistics numbers
+    const stats = document.querySelectorAll('.stat-item__number[data-count]');
+    stats.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-count'));
+        let current = 0;
+        const increment = target / 50;
+        const updateCount = () => {
+            if (current < target) {
+                current += increment;
+                stat.textContent = Math.ceil(current).toLocaleString() + '+';
+                requestAnimationFrame(updateCount);
+            } else {
+                stat.textContent = target.toLocaleString() + '+';
+            }
+        };
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                updateCount();
+                observer.disconnect();
+            }
+        });
+        observer.observe(stat);
+    });
+</script>
+{% endblock %} 

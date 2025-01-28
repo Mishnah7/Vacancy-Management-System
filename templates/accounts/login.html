@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Sign in to Berhan Bank VMS
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Login Page Styles */
+    .login-section {
+        min-height: calc(100vh - 76px);
+        background: linear-gradient(rgba(0, 59, 113, 0.95), rgba(0, 40, 85, 0.9)), url('{% static "img/meeting.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 4rem 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .login-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .login-card {
+        background: var(--white);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .login-row {
+        display: flex;
+        min-height: 600px;
+    }
+
+    .login-content {
+        flex: 1;
+        padding: 3rem;
+    }
+
+    .login-image {
+        flex: 1;
+        background: linear-gradient(45deg, var(--primary-blue), var(--primary-gold));
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-image::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+    }
+
+    .login-image__content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-image__title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-image__text {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .login-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .login-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        height: 48px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        padding: 0 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    .login-btn {
+        width: 100%;
+        height: 48px;
+        border-radius: 12px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .login-footer__link {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .login-footer__link:hover {
+        color: var(--primary-gold);
+    }
+
+    .alert {
+        border: none;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .alert-dismissable .close {
+        color: inherit;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 991px) {
+        .login-row {
+            flex-direction: column;
+        }
+
+        .login-image {
+            min-height: 300px;
+            padding: 2rem;
+        }
+
+        .login-content {
+            padding: 2rem;
+        }
+
+        .login-image__title {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .login-section {
+            padding: 2rem 0;
+        }
+
+        .login-image {
+            min-height: 250px;
+            padding: 1.5rem;
+        }
+
+        .login-content {
+            padding: 1.5rem;
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="login-section">
+    <div class="login-container">
+        <div class="login-card" data-aos="fade-up">
+            <div class="login-row">
+                <div class="login-content">
+                    <div class="login-header">
+                        <h1 class="login-title">Welcome Back</h1>
+                        <p class="login-subtitle">Sign in to continue to your account</p>
+                    </div>
+
+                    {% if form.errors %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissable" role="alert">
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form action="" method="post" class="login-form">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary login-btn">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign in to your account
+                        </button>
+
+                        <div class="login-footer">
+                            <a href="{% url 'accounts:password_reset' %}" class="login-footer__link">
+                                <i class="fas fa-lock me-1"></i>
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="login-image">
+                    <div class="login-image__content">
+                        <h2 class="login-image__title">
+                            Berhan Bank Vacancy Management System
+                        </h2>
+                        <p class="login-image__text">
+                            Welcome to our advanced vacancy management platform. Sign in to explore job opportunities, 
+                            manage applications, and take the next step in your career journey with Berhan Bank.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

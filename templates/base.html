@@ -1,0 +1,280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}{% endblock %} - Berhan Bank Jobs</title>
+    <meta name="description" content="Find your next career opportunity at Berhan Bank">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="all,follow">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+    <link rel="stylesheet" href="{% static 'css/modern.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"/>
+    
+    {% block styles %}{% endblock %}
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'jobs:home' %}">
+                <img src="{% static 'img/berhan-bank-logo.png' %}" alt="Berhan Bank" height="45" class="me-2">
+                <span class="d-none d-md-inline">Vacancy Management System</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'jobs:home' %}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'jobs' %}active{% endif %}" href="{% url 'jobs:jobs' %}">
+                            <i class="fas fa-briefcase"></i> Jobs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'templates' %}active{% endif %}" href="{% url 'resume_cv:templates' %}">
+                            <i class="fas fa-file-alt"></i> Create ResumeCV
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'jobs:about' %}">
+                            <i class="fas fa-info-circle"></i> About Us
+                        </a>
+                    </li>
+                
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'employer' %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="employerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-building"></i> Employer Zone
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end animate-fade-in">
+                                    <li><a class="dropdown-item" href="{% url 'jobs:employer-dashboard' %}">
+                                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'jobs:employer-all-applicants' %}">
+                                        <i class="fas fa-users"></i> Applicants
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'jobs:employer-jobs-create' %}">
+                                        <i class="fas fa-plus-circle"></i> Post a new job
+                                    </a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end animate-fade-in">
+                                <li>
+                                    {% if user.role == 'employer' %}
+                                        <a class="dropdown-item" href="{% url 'accounts:employer-profile-update' %}">
+                                            <i class="fas fa-user"></i> Profile
+                                        </a>
+                                    {% else %}
+                                        <a class="dropdown-item" href="{% url 'accounts:employee-profile-update' %}">
+                                            <i class="fas fa-user"></i> Profile
+                                        </a>
+                                    {% endif %}
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="registerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-plus"></i> Register
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end animate-fade-in">
+                                <li><a class="dropdown-item" href="{% url 'accounts:employee-register' %}">
+                                    <i class="fas fa-user-tie"></i> As Employee
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:employer-register' %}">
+                                    <i class="fas fa-building"></i> As Employer
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate-fade-in" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-content" data-aos="fade-up">
+                        <h4>About Berhan Bank</h4>
+                        <p>Berhan Bank is one of Ethiopia's leading private banks, committed to excellence in financial services and career development.</p>
+                        <div class="social-links mt-4">
+                            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-content" data-aos="fade-up" data-aos-delay="100">
+                        <h4>Quick Links</h4>
+                        <ul class="list-unstyled footer-links">
+                            <li><a href="{% url 'jobs:home' %}"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="{% url 'jobs:jobs' %}"><i class="fas fa-chevron-right"></i> Jobs</a></li>
+                            <li><a href="{% url 'jobs:about' %}"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="#"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-content" data-aos="fade-up" data-aos-delay="200">
+                        <h4>Contact Info</h4>
+                        <ul class="list-unstyled footer-contact">
+                            <li><i class="fas fa-map-marker-alt"></i> Addis Ababa, Ethiopia</li>
+                            <li><i class="fas fa-phone"></i> +251 116 616 666</li>
+                            <li><i class="fas fa-envelope"></i> careers@berhanbank.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4 mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-md-0">&copy; {% now "Y" %} Berhan Bank. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="me-3">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="btn btn-primary back-to-top" title="Back to Top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: true
+        });
+
+        // Navbar scroll effect
+        const navbar = document.querySelector('.navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize dropdowns properly
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl)
+            });
+
+            // Add hover functionality for desktop
+            if (window.matchMedia('(min-width: 992px)').matches) {
+                const dropdowns = document.querySelectorAll('.dropdown');
+                dropdowns.forEach(dropdown => {
+                    dropdown.addEventListener('mouseenter', function() {
+                        const toggle = this.querySelector('.dropdown-toggle');
+                        const instance = bootstrap.Dropdown.getInstance(toggle);
+                        if (instance) {
+                            instance.show();
+                        }
+                    });
+                    
+                    dropdown.addEventListener('mouseleave', function() {
+                        const toggle = this.querySelector('.dropdown-toggle');
+                        const instance = bootstrap.Dropdown.getInstance(toggle);
+                        if (instance) {
+                            instance.hide();
+                        }
+                    });
+                });
+            }
+        });
+
+        // Initialize toastr notifications
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000"
+        };
+
+        // Show any Django messages using toastr
+        {% if messages %}
+            {% for message in messages %}
+                toastr.{{ message.tags }}("{{ message }}");
+            {% endfor %}
+        {% endif %}
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

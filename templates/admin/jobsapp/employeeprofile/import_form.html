@@ -1,0 +1,130 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+<style>
+    .import-form {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 4px;
+    }
+
+    .import-form h2 {
+        margin-bottom: 20px;
+        color: #417690;
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #417690;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    }
+
+    .loading-text {
+        color: #417690;
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .progress-info {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .form-row {
+        margin-bottom: 20px;
+    }
+
+    .help-text {
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+
+    .submit-row {
+        margin-top: 30px;
+        padding: 20px 0;
+        border-top: 1px solid #eee;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="import-form">
+    <h2>Import Employees</h2>
+    
+    <form method="post" enctype="multipart/form-data" id="import-form">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <label for="id_sql_file">SQL File:</label>
+            {{ form.sql_file }}
+            <p class="help-text">{{ form.sql_file.help_text }}</p>
+        </div>
+
+        <div class="form-row">
+            <label for="id_create_users">
+                {{ form.create_users }}
+                Create User Accounts
+            </label>
+            <p class="help-text">{{ form.create_users.help_text }}</p>
+        </div>
+
+        <div class="form-row">
+            <label for="id_clear_existing">
+                {{ form.clear_existing }}
+                Clear Existing Data
+            </label>
+            <p class="help-text">{{ form.clear_existing.help_text }}</p>
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" value="Import" class="default" name="_import">
+        </div>
+    </form>
+</div>
+
+<div class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Importing Data...</div>
+    <div class="progress-info">This may take several minutes. Please do not close this window.</div>
+</div>
+
+<script>
+document.getElementById('import-form').addEventListener('submit', function(e) {
+    // Show loading overlay
+    document.querySelector('.loading-overlay').style.display = 'flex';
+    
+    // Disable the submit button to prevent double submission
+    document.querySelector('input[type="submit"]').disabled = true;
+});
+</script>
+{% endblock %} 

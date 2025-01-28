@@ -1,0 +1,724 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tag_exists %}
+{% block title %}Update Position - Berhan Bank VMS{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <style>
+    /* Job Status Styles */
+    .job-card__status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        z-index: 1;
+        position: relative;
+    }
+
+    .job-card__status.active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .job-card__status.filled {
+        background: rgba(99, 102, 241, 0.2);
+        color: #6366f1;
+    }
+
+    .job-card__status.expired {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .update-form-section {
+        padding: 3rem 0;
+        background: var(--background-light);
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 30s linear infinite;
+    }
+
+    @keyframes patternMove {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(-20px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+
+    .form-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .form-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+        position: relative;
+    }
+
+    .form-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 59, 113, 0.1);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--primary-gold));
+    }
+
+    .form-card__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-card__title i {
+        color: var(--primary-blue);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        height: 48px;
+        border-radius: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: var(--white);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    textarea.form-control {
+        height: auto;
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .select2-container--default .select2-selection--multiple,
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        border-radius: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        padding: 0.5rem;
+        background-color: var(--white);
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background: rgba(0, 59, 113, 0.1);
+        border: none;
+        border-radius: 8px;
+        padding: 0.25rem 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 32px;
+        padding-left: 0;
+        color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: var(--text-primary);
+        margin-right: 5px;
+    }
+
+    .btn-submit {
+        height: 48px;
+        border-radius: 12px;
+        padding: 0 2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+        border: none;
+        color: var(--white);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 59, 113, 0.2);
+    }
+
+    .btn-submit i {
+        margin-right: 0.75rem;
+        font-size: 1.2rem;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: none;
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .form-text {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+
+    .required-field::after {
+        content: '*';
+        color: #ef4444;
+        margin-left: 4px;
+        }
+
+    .tox-tinymce {
+        border-radius: 12px !important;
+        border: 2px solid rgba(0, 59, 113, 0.1) !important;
+    }
+
+    .form-floating-info {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 59, 113, 0.05);
+        padding: 1rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        max-width: 300px;
+    }
+
+    .form-floating-info i {
+        color: var(--primary-blue);
+        margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-header {
+            padding: 1.5rem;
+        }
+
+        .form-card {
+            padding: 1.5rem;
+        }
+
+        .form-floating-info {
+            position: static;
+            margin-bottom: 1rem;
+            max-width: none;
+        }
+    }
+
+    /* Replace TinyMCE styles with CKEditor styles */
+    .ck-editor__editable {
+        min-height: 300px !important;
+        max-height: 500px !important;
+        border-radius: 0 0 12px 12px !important;
+        background: var(--white) !important;
+    }
+
+    .ck.ck-editor__main>.ck-editor__editable {
+        border-color: rgba(0, 59, 113, 0.1) !important;
+    }
+
+    .ck.ck-editor__main>.ck-editor__editable.ck-focused {
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1) !important;
+    }
+
+    .ck.ck-toolbar {
+        border-radius: 12px 12px 0 0 !important;
+        border-color: rgba(0, 59, 113, 0.1) !important;
+        background: var(--white) !important;
+    }
+
+    .ck.ck-toolbar .ck-toolbar__items {
+        padding: 8px !important;
+    }
+
+    .ck.ck-button {
+        padding: 6px !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .ck.ck-button:hover {
+        background: rgba(0, 59, 113, 0.05) !important;
+    }
+
+    .ck.ck-button.ck-on {
+        background: var(--primary-blue) !important;
+        color: var(--white) !important;
+    }
+
+    .ck.ck-button.ck-on .ck-icon {
+        color: var(--white) !important;
+    }
+
+    .ck.ck-button.ck-on:hover {
+        background: var(--dark-blue) !important;
+    }
+
+    .ck.ck-toolbar__separator {
+        background: rgba(0, 59, 113, 0.1) !important;
+    }
+
+    /* Required Skills Dropdown Styling */
+    .skills-wrapper {
+        position: relative;
+    }
+
+    .skills-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        min-height: 48px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .skills-input:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+        outline: none;
+    }
+
+    .skill-tag {
+        background: var(--primary-blue);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .skill-tag .remove {
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .skill-tag .remove:hover {
+        opacity: 1;
+    }
+
+    .skills-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        background: white;
+        border: 2px solid var(--primary-blue);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 59, 113, 0.1);
+        z-index: 1000;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .skills-dropdown.active {
+        display: block;
+    }
+
+    .skills-search {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 59, 113, 0.1);
+    }
+
+    .skills-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid rgba(0, 59, 113, 0.2);
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .skills-search input:focus {
+        border-color: var(--primary-blue);
+        outline: none;
+    }
+
+    .skills-list {
+        padding: 8px 0;
+    }
+
+    .skill-option {
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .skill-option:hover {
+        background: rgba(0, 59, 113, 0.05);
+    }
+
+    .skill-option.selected {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .skill-option i {
+        opacity: 0.7;
+    }
+
+    .skills-footer {
+        padding: 12px;
+        border-top: 1px solid rgba(0, 59, 113, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .skills-count {
+        font-size: 0.9rem;
+        color: rgba(0, 0, 0, 0.6);
+    }
+
+    .skills-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .skills-actions button {
+        padding: 4px 12px;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .skills-actions .clear-btn {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .skills-actions .clear-btn:hover {
+        background: rgba(220, 53, 69, 0.2);
+    }
+
+    .skills-actions .apply-btn {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .skills-actions .apply-btn:hover {
+        background: var(--dark-blue);
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<section class="update-form-section">
+    <div class="container">
+        <div class="form-header" data-aos="fade-up">
+            <h1>Update Position</h1>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p>Update the job posting details below. All fields marked with * are required.</p>
+                <div class="job-card__status {% if not job.filled and job.last_date >= today %}active{% elif job.filled %}filled{% else %}expired{% endif %}">
+                    {% if not job.filled and job.last_date >= today %}
+                        Active
+                    {% elif job.filled %}
+                        Filled
+                    {% else %}
+                        Expired
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>{{ field.label }}:</strong> {{ error|escape }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ error|escape }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="job-update-form" data-aos="fade-up">
+            {% csrf_token %}
+            
+            <!-- Job Details -->
+            <div class="form-card">
+                <h3 class="form-card__title">
+                    <i class="fas fa-briefcase"></i>Job Details
+                </h3>
+                        <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="title" class="required-field">Job Title</label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                                <small class="form-text text-muted">{{ form.title.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="type" class="required-field">Job Type</label>
+                            {{ form.type }}
+                            {% if form.type.help_text %}
+                                <small class="form-text text-muted">{{ form.type.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="category" class="required-field">Category</label>
+                            {{ form.category }}
+                            {% if form.category.help_text %}
+                                <small class="form-text text-muted">{{ form.category.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="posting_type" class="required-field">Posting Type</label>
+                            {{ form.posting_type }}
+                            {% if form.posting_type.help_text %}
+                                <small class="form-text text-muted">{{ form.posting_type.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                        </div>
+
+                <div class="form-group">
+                    <label for="description" class="required-field">Job Description</label>
+                    {{ form.description }}
+                    {% if form.description.help_text %}
+                        <small class="form-text text-muted">{{ form.description.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                        <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="location" class="required-field">Location</label>
+                            {{ form.location }}
+                            {% if form.location.help_text %}
+                                <small class="form-text text-muted">{{ form.location.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="salary">Salary</label>
+                            {{ form.salary }}
+                            {% if form.salary.help_text %}
+                                <small class="form-text text-muted">{{ form.salary.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="last_date" class="required-field">Last Date to Apply</label>
+                            {{ form.last_date }}
+                            {% if form.last_date.help_text %}
+                                <small class="form-text text-muted">{{ form.last_date.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="vacancy" class="required-field">Number of Vacancies</label>
+                            {{ form.vacancy }}
+                            {% if form.vacancy.help_text %}
+                                <small class="form-text text-muted">{{ form.vacancy.help_text }}</small>
+                            {% endif %}
+                        </div>
+                            </div>
+                        </div>
+
+                <div class="form-group">
+                    <label for="tags" class="required-field">Required Skills</label>
+                    {{ form.tags }}
+                    {% if form.tags.help_text %}
+                        <small class="form-text text-muted">{{ form.tags.help_text }}</small>
+                    {% endif %}
+                            </div>
+                        </div>
+
+            <!-- Company Details -->
+            <div class="form-card">
+                <h3 class="form-card__title">
+                    <i class="fas fa-building"></i>Company Details
+                </h3>
+                <div class="form-group">
+                    <label for="company_name" class="required-field">Company Name</label>
+                    {{ form.company_name }}
+                    {% if form.company_name.help_text %}
+                        <small class="form-text text-muted">{{ form.company_name.help_text }}</small>
+                    {% endif %}
+                            </div>
+
+                <div class="form-group">
+                    <label for="company_description">Company Description</label>
+                    {{ form.company_description }}
+                    {% if form.company_description.help_text %}
+                        <small class="form-text text-muted">{{ form.company_description.help_text }}</small>
+                    {% endif %}
+                        </div>
+
+                <div class="form-group">
+                    <label for="website">Company Website</label>
+                    {{ form.website }}
+                    {% if form.website.help_text %}
+                        <small class="form-text text-muted">{{ form.website.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-submit">
+                    <i class="fas fa-save"></i>
+                    Update Position
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize CKEditor
+        const editors = {};
+        
+        // Function to safely initialize editor
+        async function initializeEditor(selector) {
+            const element = document.querySelector(selector);
+            if (!element || element.closest('.ck-editor')) return;
+            
+            try {
+                const editor = await ClassicEditor.create(element, {
+                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
+                    placeholder: selector === '#id_description' ? 'Enter detailed job description...' : 'Enter company description...',
+                    removePlugins: ['MediaEmbed', 'Table', 'TableToolbar'],
+                    height: '300px'
+                });
+                editors[selector] = editor;
+
+                // Set initial content if it exists
+                const initialContent = $(selector).val();
+                if (initialContent) {
+                    editor.setData(initialContent);
+                }
+            } catch (error) {
+                console.error(`Error initializing editor for ${selector}:`, error);
+            }
+        }
+
+        // Initialize editors
+        ['#id_description', '#id_company_description'].forEach(selector => {
+            initializeEditor(selector);
+        });
+
+        // Form submission handling
+        $('.job-update-form').on('submit', function(e) {
+            Object.entries(editors).forEach(([selector, editor]) => {
+                if (editor) {
+                    const content = editor.getData();
+                    if (selector === '#id_description' && content.length < 100) {
+                        e.preventDefault();
+                        alert('Job description must be at least 100 characters long');
+                        return false;
+                    }
+                    $(selector).val(content);
+                }
+            });
+        });
+
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Initialize datepicker for last_date field
+        $('#id_last_date').attr('min', new Date().toISOString().split('T')[0]);
+    });
+</script>
+{% endblock %}

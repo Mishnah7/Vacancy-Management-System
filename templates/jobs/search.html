@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load is_favorited %}
+{% load humanize %}
+{% load tag_exists %}
+
+{% block title %}Search Jobs - Berhan Bank VMS{% endblock %}
+
+{% block styles %}
+<style>
+    .hero-search {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: -3rem;
+    }
+
+    .hero-search::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 30s linear infinite;
+    }
+
+    @keyframes patternMove {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(-20px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+
+    .hero-search__content {
+        text-align: center;
+        color: var(--white);
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-search__title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .hero-search__subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .search-form {
+        background: var(--white);
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .search-form .form-group {
+        margin-bottom: 0;
+    }
+
+    .search-form label {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .search-form .form-control {
+        height: 54px;
+        border-radius: 12px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        padding: 0 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-form .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    .search-form .btn-search {
+        height: 54px;
+        padding: 0 2rem;
+        font-weight: 600;
+        margin-top: 1.85rem;
+    }
+
+    .search-results {
+        padding: 5rem 0 3rem;
+        background: var(--background-light);
+        min-height: calc(100vh - 200px);
+    }
+
+    .search-results__info {
+        background: var(--white);
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .search-results__count {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .search-results__clear {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .search-results__clear:hover {
+        text-decoration: underline;
+    }
+
+    .job-listing {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .job-listing:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary-blue);
+        box-shadow: 0 10px 20px rgba(0, 59, 113, 0.1);
+    }
+
+    .job-listing__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.25rem;
+    }
+
+    .job-listing__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .job-listing__title a {
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .job-listing__title a:hover {
+        color: var(--primary-blue);
+    }
+
+    .job-listing__company {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .job-listing__status {
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+    }
+
+    .job-listing__status:hover .job-listing__status-tooltip {
+        display: block;
+    }
+
+    .job-listing__status-tooltip {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: var(--white);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: max-content;
+        max-width: 250px;
+        z-index: 10;
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        text-align: left;
+    }
+
+    .job-listing__status-tooltip::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        right: 1rem;
+        width: 8px;
+        height: 8px;
+        background: var(--white);
+        transform: rotate(45deg);
+    }
+
+    .job-listing__status.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .job-listing__status.filled {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .job-listing__status.expired {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .job-listing__details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .job-listing__location {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .job-listing__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .job-listing__tag {
+        padding: 0.35rem 0.75rem;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .job-listing__tag--tech {
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .job-listing__tag--internal {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .job-listing__tag--external {
+        background: rgba(247, 171, 30, 0.1);
+        color: #f7ab1e;
+    }
+
+    .job-listing__tag--both {
+        background: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .job-listing__meta {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-search {
+            padding: 3rem 0;
+        }
+
+        .hero-search__title {
+            font-size: 2rem;
+        }
+
+        .search-form {
+            padding: 1.5rem;
+        }
+
+        .search-form .btn-search {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .job-listing {
+            padding: 1.25rem;
+        }
+
+        .job-listing__details {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Search Section -->
+<section class="hero-search">
+    <div class="container">
+        <div class="hero-search__content">
+            <h1 class="hero-search__title">Find Your Next Career Opportunity</h1>
+            <p class="hero-search__subtitle">Search through our latest job openings at Berhan Bank</p>
+        </div>
+        <form method="get" action="{% url 'jobs:search' %}" class="search-form">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label for="q">What position are you looking for?</label>
+                        <input type="text" id="q" name="q" value="{{ q }}"
+                               class="form-control" placeholder="e.g. Software Engineer, Bank Teller">
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label for="l">Where would you like to work?</label>
+                        <input type="text" id="l" name="l" value="{{ l }}"
+                               class="form-control" placeholder="e.g. Addis Ababa, Bahir Dar">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 btn-search">
+                        <i class="fas fa-search me-2"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Search Results Section -->
+<section class="search-results">
+    <div class="container">
+        {% if q or l %}
+            <div class="search-results__info">
+                <div class="search-results__count">
+                    {% if total_jobs > 0 %}
+                        Found {{ total_jobs }} job{{ total_jobs|pluralize }} matching 
+                        {% if q %}"{{ q }}"{% endif %}
+                        {% if q and l %}and{% endif %}
+                        {% if l %}location "{{ l }}"{% endif %}
+                    {% else %}
+                        No jobs found matching your search criteria
+                    {% endif %}
+                </div>
+                <a href="{% url 'jobs:search' %}" class="search-results__clear">
+                    <i class="fas fa-times"></i>
+                    Clear search
+                </a>
+            </div>
+        {% endif %}
+
+        {% if jobs %}
+            {% for job in jobs %}
+                <div class="job-listing" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+                    <div class="job-listing__header">
+                        <div class="job-listing__title-group">
+                            <h3 class="job-listing__title">
+                                <a href="{% url 'jobs:jobs-detail' job.id %}">{{ job.title }}</a>
+                            </h3>
+                            <div class="job-listing__company">
+                                <i class="fas fa-building me-2"></i>
+                                {{ job.company_name }}
+                            </div>
+                        </div>
+                        <div class="job-listing__status {% if not job.filled and job.last_date > today %}active{% elif job.filled %}filled{% else %}expired{% endif %}">
+                            {% if not job.filled and job.last_date > today %}
+                                <i class="fas fa-check-circle"></i> Active
+                                <div class="job-listing__status-tooltip">
+                                    Applications open until {{ job.last_date|date:"F j, Y" }}
+                                </div>
+                            {% elif job.filled %}
+                                <i class="fas fa-user-check"></i> Filled
+                                <div class="job-listing__status-tooltip">
+                                    This position has been filled and is no longer accepting applications
+                                </div>
+                            {% else %}
+                                <i class="fas fa-clock"></i> Expired
+                                <div class="job-listing__status-tooltip">
+                                    Application deadline was {{ job.last_date|date:"F j, Y" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="job-listing__details">
+                        <div class="job-listing__location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ job.location }}
+                        </div>
+                        <div class="job-listing__tags">
+                            {% if job.type == '1' %}
+                                <span class="job-listing__tag job-listing__tag--tech">
+                                    <i class="fas fa-briefcase me-1"></i> Full Time
+                                </span>
+                            {% elif job.type == '2' %}
+                                <span class="job-listing__tag job-listing__tag--tech">
+                                    <i class="fas fa-clock me-1"></i> Part Time
+                                </span>
+                            {% else %}
+                                <span class="job-listing__tag job-listing__tag--tech">
+                                    <i class="fas fa-graduation-cap me-1"></i> Internship
+                                </span>
+                            {% endif %}
+                            {% if job.posting_type == 'internal' %}
+                                <span class="job-listing__tag job-listing__tag--internal">
+                                    <i class="fas fa-building me-1"></i> Internal Only
+                                </span>
+                            {% elif job.posting_type == 'external' %}
+                                <span class="job-listing__tag job-listing__tag--external">
+                                    <i class="fas fa-globe me-1"></i> External Only
+                                </span>
+                            {% else %}
+                                <span class="job-listing__tag job-listing__tag--both">
+                                    <i class="fas fa-users me-1"></i> Internal & External
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="job-listing__meta">
+                            <i class="fas fa-clock"></i>
+                            Posted {{ job.created_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5" data-aos="fade-up">
+                <img src="{% static 'img/no-results.svg' %}" alt="No jobs found" class="mb-4" style="max-width: 200px;">
+                <h3 class="h4 mb-3">No Jobs Found</h3>
+                <p class="text-muted">We couldn't find any jobs matching your criteria. Try adjusting your search filters.</p>
+            </div>
+        {% endif %}
+
+        {% if is_paginated %}
+            {% include 'includes/pagination.html' %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+        // Initialize select2 for category dropdown
+        $('.search-input select').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Filter form submission
+        $('.custom-checkbox input').change(function() {
+            $(this).closest('form').submit();
+        });
+
+        // Animate job cards on scroll
+        $(window).scroll(function() {
+            $('.job-card').each(function() {
+                if ($(this).offset().top < $(window).scrollTop() + $(window).height() - 100) {
+                    $(this).addClass('aos-animate');
+                }
+            });
+        });
+
+            // Initialize tooltips
+        $('[title]').tooltip();
+    });
+
+    function toggleFavorite(button, jobId) {
+                $.ajax({
+            url: '{% url "jobs:favorite" %}',
+            type: 'POST',
+                    data: {
+                'job_id': jobId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'added') {
+                    $(button).addClass('saved');
+                    $(button).attr('title', 'Remove from saved');
+                } else if (response.status === 'removed') {
+                    $(button).removeClass('saved');
+                    $(button).attr('title', 'Save job');
+                }
+                $(button).tooltip('dispose').tooltip();
+                toastr.success(response.message);
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    toastr.error('Please login to save jobs');
+                        } else {
+                    toastr.error('An error occurred. Please try again.');
+                        }
+                    }
+        });
+    }
+    </script>
+{% endblock %}

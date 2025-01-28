@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+    Applicants for {{ job.title }}
+{% endblock %}
+
+{% block styles %}
+<style>
+    .applicants-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        padding: 3rem 0;
+        color: var(--white);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .applicants-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "img/pattern.svg" %}') center/cover;
+        opacity: 0.1;
+        animation: patternMove 30s linear infinite;
+    }
+
+    @keyframes patternMove {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(-20px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+
+    .job-info {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .job-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--primary-gold));
+    }
+
+    .job-info__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .job-info__meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .job-info__meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .job-info__meta-item i {
+        color: var(--primary-blue);
+    }
+
+    .applicant-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .applicant-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-blue);
+    }
+
+    .applicant-card__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .applicant-card__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .applicant-card__status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .applicant-card__status.pending {
+        background: rgba(247, 171, 30, 0.1);
+        color: var(--primary-gold);
+    }
+
+    .applicant-card__status.accepted {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-green);
+    }
+
+    .applicant-card__status.rejected {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .applicant-card__meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .applicant-card__meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .applicant-card__meta-item i {
+        color: var(--primary-blue);
+        width: 16px;
+    }
+
+    .applicant-card__actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 59, 113, 0.1);
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-action.view {
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .btn-action.accept {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-green);
+    }
+
+    .btn-action.reject {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+
+    .no-applicants {
+        text-align: center;
+        padding: 3rem;
+        background: var(--white);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .no-applicants i {
+        font-size: 3rem;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .no-applicants h3 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .no-applicants p {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .applicants-header {
+            padding: 2rem 0;
+        }
+
+        .job-info__meta,
+        .applicant-card__meta {
+            grid-template-columns: 1fr;
+        }
+
+        .applicant-card__actions {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="applicants-header">
+    <div class="container">
+        <h1 class="mb-2">Applicants</h1>
+        <p class="mb-0">Review and manage applications for this position</p>
+    </div>
+</section>
+
+<div class="container">
+    <!-- Job Information -->
+    <div class="job-info" data-aos="fade-up">
+        <h2 class="job-info__title">{{ job.title }}</h2>
+        <div class="job-info__meta">
+            <div class="job-info__meta-item">
+                <i class="fas fa-building"></i>
+                <span>{{ job.company_name }}</span>
+            </div>
+            <div class="job-info__meta-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ job.location }}</span>
+            </div>
+            <div class="job-info__meta-item">
+                <i class="fas fa-clock"></i>
+                <span>Posted {{ job.created_at|naturaltime }}</span>
+            </div>
+            <div class="job-info__meta-item">
+                <i class="fas fa-users"></i>
+                <span>{{ applicants|length }} Applicant{{ applicants|length|pluralize }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applicants List -->
+    {% if applicants %}
+        {% for applicant in applicants %}
+            <div class="applicant-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+                <div class="applicant-card__header">
+                    <div>
+                        <h3 class="applicant-card__title">{{ applicant.user.get_full_name }}</h3>
+                        <div class="applicant-card__meta-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>{{ applicant.user.email }}</span>
+                        </div>
+                    </div>
+                    <span class="applicant-card__status {{ applicant.get_status|lower }}">
+                        {{ applicant.get_status }}
+                    </span>
+                </div>
+
+                <div class="applicant-card__meta">
+                    <div class="applicant-card__meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Applied {{ applicant.created_at|naturaltime }}</span>
+                    </div>
+                    {% if applicant.user.profile %}
+                        <div class="applicant-card__meta-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>{{ applicant.user.profile.experience_years }} Years Experience</span>
+                        </div>
+                        <div class="applicant-card__meta-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>{{ applicant.user.profile.education }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if applicant.comment %}
+                    <div class="applicant-card__comment">
+                        <p class="mb-0"><strong>Comment:</strong> {{ applicant.comment }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="applicant-card__actions">
+                    <a href="{% url 'jobs:applied-applicant-view' job.id applicant.id %}" class="btn-action view">
+                        <i class="fas fa-eye"></i> View Application
+                    </a>
+                    {% if applicant.status == 1 %}
+                        <form method="post" action="{% url 'jobs:applicant-send-response' applicant.id %}" class="d-inline" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="job_id" value="{{ job.id }}">
+                            <button type="submit" name="status" value="2" class="btn-action accept">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                            <button type="submit" name="status" value="3" class="btn-action reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-applicants" data-aos="fade-up">
+            <i class="fas fa-users"></i>
+            <h3>No Applicants Yet</h3>
+            <p>There are no applications for this position yet. Check back later or promote your job posting to attract more candidates.</p>
+            <a href="{% url 'jobs:employer-dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+</script>
+{% endblock %}

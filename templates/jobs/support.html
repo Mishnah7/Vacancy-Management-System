@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Support Center - Berhan Bank VMS{% endblock %}
+
+{% block styles %}
+<style>
+    .support-hero {
+        background: linear-gradient(135deg, rgba(0, 59, 113, 0.97), rgba(255, 193, 7, 0.95)), url('{% static "img/meeting.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 6rem 0;
+        position: relative;
+        color: var(--white);
+        text-align: center;
+    }
+
+    .support-hero__title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .support-hero__subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .support-section {
+        padding: 5rem 0;
+        background: var(--white);
+        position: relative;
+    }
+
+    .support-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: radial-gradient(circle at top right, rgba(0, 59, 113, 0.03) 0%, transparent 70%),
+                    radial-gradient(circle at bottom left, rgba(255, 193, 7, 0.03) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .support-card {
+        background: var(--white);
+        border-radius: 24px;
+        padding: 2.5rem;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid rgba(0, 59, 113, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .support-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 59, 113, 0.1);
+    }
+
+    .support-card__icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
+        color: var(--white);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .support-card__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .support-card__text {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .support-link {
+        display: flex;
+        align-items: center;
+        color: var(--text-primary);
+        text-decoration: none;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+        background: rgba(0, 59, 113, 0.03);
+    }
+
+    .support-link:hover {
+        background: rgba(0, 59, 113, 0.08);
+        color: var(--primary-blue);
+        transform: translateX(10px);
+    }
+
+    .support-link i {
+        margin-right: 1rem;
+        color: var(--primary-blue);
+        transition: transform 0.3s ease;
+    }
+
+    .support-link:hover i {
+        transform: scale(1.2);
+    }
+
+    .quick-help {
+        background: linear-gradient(45deg, var(--primary-blue), var(--primary-gold));
+        padding: 3rem;
+        border-radius: 24px;
+        color: var(--white);
+        margin-top: 3rem;
+    }
+
+    .quick-help__title {
+        color: var(--white);
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .quick-help__item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .quick-help__item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(10px);
+    }
+
+    .quick-help__item h4 {
+        color: var(--white);
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .quick-help__item p {
+        margin: 0;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="support-hero">
+    <div class="container">
+        <h1 class="support-hero__title" data-aos="fade-up">Support Center</h1>
+        <p class="support-hero__subtitle" data-aos="fade-up" data-aos-delay="100">
+            Find the help you need with our comprehensive support resources
+        </p>
+    </div>
+</section>
+
+<!-- Support Section -->
+<section class="support-section">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Application Support -->
+            <div class="col-lg-4" data-aos="fade-up">
+                <div class="support-card">
+                    <div class="support-card__icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="support-card__title">Application Support</h3>
+                    <p class="support-card__text">
+                        Get help with your job application process and resume creation.
+                    </p>
+                    <div class="support-links">
+                        <a href="{% url 'jobs:faq' %}" class="support-link">
+                            <i class="fas fa-question-circle"></i>
+                            Application FAQs
+                        </a>
+                        <a href="{% static 'docs/application_guide.pdf' %}" class="support-link" target="_blank">
+                            <i class="fas fa-book"></i>
+                            Application Guide
+                        </a>
+                        <a href="{% url 'resume_cv:templates' %}" class="support-link">
+                            <i class="fas fa-file"></i>
+                            Resume Templates
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Support -->
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="support-card">
+                    <div class="support-card__icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <h3 class="support-card__title">Technical Support</h3>
+                    <p class="support-card__text">
+                        Technical assistance for using our career portal and online services.
+                    </p>
+                    <div class="support-links">
+                        <a href="{% url 'jobs:contact' %}" class="support-link">
+                            <i class="fas fa-headset"></i>
+                            Contact Tech Support
+                        </a>
+                        <a href="#" class="support-link" data-bs-toggle="modal" data-bs-target="#systemStatusModal">
+                            <i class="fas fa-signal"></i>
+                            System Status
+                        </a>
+                        <a href="{% static 'docs/user_guide.pdf' %}" class="support-link" target="_blank">
+                            <i class="fas fa-book"></i>
+                            User Guide
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Career Support -->
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="support-card">
+                    <div class="support-card__icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="support-card__title">Career Support</h3>
+                    <p class="support-card__text">
+                        Resources to help you advance your career at Berhan Bank.
+                    </p>
+                    <div class="support-links">
+                        <a href="{% static 'docs/career_guide.pdf' %}" class="support-link" target="_blank">
+                            <i class="fas fa-graduation-cap"></i>
+                            Career Development Guide
+                        </a>
+                        <a href="{% url 'jobs:jobs' %}" class="support-link">
+                            <i class="fas fa-search"></i>
+                            Browse Opportunities
+                        </a>
+                        <a href="{% url 'jobs:about' %}" class="support-link">
+                            <i class="fas fa-info-circle"></i>
+                            About Berhan Bank
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Help Section -->
+        <div class="quick-help" data-aos="fade-up">
+            <h2 class="quick-help__title">Quick Help</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="quick-help__item">
+                        <h4><i class="fas fa-clock me-2"></i>Response Time</h4>
+                        <p>We aim to respond to all inquiries within 24-48 hours during business days.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="quick-help__item">
+                        <h4><i class="fas fa-phone me-2"></i>Direct Support</h4>
+                        <p>Call us at +251 116 616 666 during business hours for immediate assistance.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="quick-help__item">
+                        <h4><i class="fas fa-envelope me-2"></i>Email Support</h4>
+                        <p>Send your queries to careers@berhanbank.com for detailed assistance.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="quick-help__item">
+                        <h4><i class="fas fa-map-marker-alt me-2"></i>Visit Us</h4>
+                        <p>Visit our head office in Addis Ababa for in-person support during business hours.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- System Status Modal -->
+<div class="modal fade" id="systemStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">System Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <div>
+                        <h6 class="mb-0">Career Portal</h6>
+                        <small class="text-success">Operational</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <div>
+                        <h6 class="mb-0">Application System</h6>
+                        <small class="text-success">Operational</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <div>
+                        <h6 class="mb-0">Resume Builder</h6>
+                        <small class="text-success">Operational</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

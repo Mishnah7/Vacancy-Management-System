@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+    Home
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        padding: 120px 0;
+        background: linear-gradient(rgba(0, 59, 113, 0.85), rgba(0, 40, 85, 0.95)), url('{% static "img/meeting.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        min-height: 600px;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to bottom right, transparent 49%, var(--white) 50%);
+    }
+
+    .hero-content {
+        background: rgba(255, 255, 255, 0.98);
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+        transform: translateY(0);
+        transition: all 0.3s ease;
+    }
+
+    .hero-content:hover {
+        transform: translateY(-5px);
+    }
+
+    .hero-heading {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        line-height: 1.2;
+        background: linear-gradient(45deg, var(--primary-blue), var(--primary-gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+    }
+
+    /* Search Form */
+    .search-form {
+        position: relative;
+        z-index: 1;
+    }
+
+    .search-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .search-form .form-control {
+        height: 60px;
+        border: 2px solid rgba(0, 59, 113, 0.1);
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--white);
+    }
+
+    .search-form .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 4px rgba(0, 59, 113, 0.1);
+    }
+
+    .search-form .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .search-btn {
+        height: 60px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: var(--primary-gold);
+        border: none;
+        border-radius: 12px;
+        color: var(--primary-blue);
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        background: var(--primary-blue);
+        color: var(--white);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Featured Jobs Section */
+    .featured-section {
+        padding: 5rem 0;
+        background: var(--background-light);
+    }
+
+    .section-heading {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: var(--primary-blue);
+    }
+
+    .job-card {
+        background: var(--white);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .job-card__image {
+        position: relative;
+        padding-top: 56.25%;
+        overflow: hidden;
+    }
+
+    .job-card__image img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .job-card__logo {
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: var(--white);
+        padding: 8px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .job-card__logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .job-card__content {
+        padding: 2rem 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .job-card__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 1rem 0;
+        color: var(--primary-blue);
+    }
+
+    .job-card__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .job-card__location {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .job-card__tags {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .job-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .job-badge--full-time {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-green);
+    }
+
+    .job-badge--part-time {
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .job-badge--internship {
+        background: rgba(247, 171, 30, 0.1);
+        color: var(--primary-gold);
+    }
+
+    .job-badge--tag {
+        background: rgba(74, 85, 104, 0.1);
+        color: var(--text-secondary);
+    }
+
+    /* Trending Section */
+    .trending-section {
+        padding: 5rem 0;
+    }
+
+    .trending-job {
+        padding: 1.5rem;
+        border-radius: 16px;
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .trending-job:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .trending-job__company-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .trending-job__company-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .trending-job__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .trending-job__company {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .trending-job__meta {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trending-job__favorite {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(0, 59, 113, 0.1);
+        color: var(--primary-blue);
+        transition: all 0.3s ease;
+    }
+
+    .trending-job__favorite:hover {
+        background: var(--primary-blue);
+        color: var(--white);
+        transform: scale(1.1);
+    }
+
+    /* CTA Section */
+    .cta-section {
+        padding: 5rem 0;
+        background: linear-gradient(45deg, var(--primary-blue), var(--dark-blue));
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to top right, transparent 49%, var(--background-light) 50%);
+    }
+
+    .cta-content {
+        text-align: center;
+        color: var(--white);
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-content h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-content p {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .cta-btn {
+        padding: 1rem 2.5rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: var(--primary-gold);
+        color: var(--primary-blue);
+        border: none;
+        border-radius: 100px;
+        transition: all 0.3s ease;
+    }
+
+    .cta-btn:hover {
+        background: var(--white);
+        color: var(--primary-blue);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 80px 0;
+            min-height: auto;
+        }
+
+        .hero-content {
+            padding: 2rem;
+        }
+
+        .hero-heading {
+            font-size: 2.5rem;
+        }
+
+        .section-heading {
+            font-size: 2rem;
+        }
+
+        .search-form .form-control,
+        .search-btn {
+            height: 50px;
+        }
+
+        .trending-job {
+            padding: 1rem;
+        }
+
+        .cta-section {
+            padding: 4rem 0;
+        }
+
+        .cta-content h3 {
+            font-size: 2rem;
+        }
+
+        .cta-content p {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="hero-content" data-aos="fade-up">
+                        <h1 class="hero-heading">
+                            Discover Your Next Career Opportunity
+                        </h1>
+                        <form class="search-form" method="get" action="{% url 'jobs:search' %}">
+                            <div class="row g-4">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label for="profession" class="form-label">{% trans 'What position are you looking for?' %}</label>
+                                        <input type="text" id="profession" name="q"
+                                               placeholder="e.g. Software Engineer, Bank Teller" 
+                                               class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label for="location" class="form-label">Where would you like to work?</label>
+                                        <input type="text" id="location" name="l"
+                                               placeholder="e.g. Addis Ababa, Bahir Dar" 
+                                               class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="d-block" style="visibility: hidden;">Search</label>
+                                        <button type="submit" class="btn search-btn w-100">
+                                            <i class="fas fa-search me-2"></i> Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Jobs Section -->
+    <section class="featured-section">
+        <div class="container">
+            <h2 class="section-heading" data-aos="fade-up">Featured Opportunities</h2>
+            <div class="row g-4">
+                {% for job in jobs %}
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+                        <div class="job-card">
+                            <div class="job-card__image">
+                                <img src="{% static 'img/featured1.jpg' %}" alt="Job Image">
+                                <div class="job-card__logo">
+                                    <img src="{% static 'img/company-1.png' %}" alt="Company Logo">
+                                </div>
+                            </div>
+                            <div class="job-card__content">
+                                <h3 class="job-card__title">
+                                    <a href="{% url 'jobs:jobs-detail' job.id %}">{{ job.title }}</a>
+                                </h3>
+                                <div class="job-card__location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    {{ job.location }}
+                                </div>
+                                <div class="job-card__tags">
+                                    {% if job.type == '1' %}
+                                        <span class="job-badge job-badge--full-time">Full time</span>
+                                    {% elif job.type == '2' %}
+                                        <span class="job-badge job-badge--part-time">Part time</span>
+                                    {% else %}
+                                        <span class="job-badge job-badge--internship">Internship</span>
+                                    {% endif %}
+                                    {% for tag in job.tags.all %}
+                                        <span class="job-badge job-badge--tag">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {% if trendings %}
+        <!-- Trending Jobs Section -->
+        <section class="trending-section">
+            <div class="container">
+                <h2 class="section-heading" data-aos="fade-up">Trending This Month</h2>
+                {% for trending in trendings %}
+                    <div class="trending-job" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|add:1 }}00">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="trending-job__company-logo me-3">
+                                        <img src="{% static 'img/company-1.png' %}" alt="Company Logo">
+                                    </div>
+                                    <div>
+                                        <h3 class="trending-job__title mb-1">
+                                            <a href="{% url 'jobs:jobs-detail' trending.id %}" class="text-decoration-none">{{ trending.title }}</a>
+                                        </h3>
+                                        <p class="trending-job__company mb-0">{{ trending.company_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="trending-job__meta">
+                                    <span><i class="fas fa-map-marker-alt me-2"></i>{{ trending.location }}</span>
+                                    <span class="ms-3"><i class="fas fa-clock me-2"></i>Posted {{ trending.created_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-1 text-end">
+                                <a href="#" class="trending-job__favorite" data-bs-toggle="tooltip" title="Save to favorites">
+                                    <i class="far fa-heart"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content" data-aos="fade-up">
+                <h3>Ready to Take the Next Step?</h3>
+                <p>Browse through our extensive list of opportunities and find the perfect match for your career goals.</p>
+                <a href="{% url 'jobs:jobs' %}" class="btn cta-btn">
+                    Explore All Jobs <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
