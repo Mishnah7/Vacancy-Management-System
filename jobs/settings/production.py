@@ -21,15 +21,21 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = ['vacancy-management-system-production.up.railway.app']
 
 # Database configuration for Railway
-database_url = os.environ.get('DATABASE_URL')
-if not database_url:
-    print("Error: DATABASE_URL environment variable is required in production")
-    sys.exit(1)
+# Construct internal database URL to avoid egress fees
+PGUSER = os.environ.get('PGUSER')
+PGPASSWORD = os.environ.get('POSTGRES_PASSWORD')
+PGHOST = os.environ.get('PGHOST')
+PGPORT = os.environ.get('PGPORT')
+PGDATABASE = os.environ.get('PGDATABASE')
 
-# Use internal connection URL if available to avoid egress fees
-internal_db_url = os.environ.get('PGDATA')
-if internal_db_url:
-    database_url = internal_db_url
+if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
+    database_url = f'postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
+else:
+    # Fallback to DATABASE_URL if any of the components are missing
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        print("Error: Neither internal PostgreSQL variables nor DATABASE_URL are properly set")
+        sys.exit(1)
 
 DATABASES = {
     'default': dj_database_url.config(
