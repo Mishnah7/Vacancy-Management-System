@@ -20,25 +20,44 @@ if not SECRET_KEY:
 # Configure allowed hosts
 ALLOWED_HOSTS = ['*']  # Temporarily allow all hosts for debugging
 
+# Print all environment variables for debugging
+print("Available environment variables:")
+for key, value in os.environ.items():
+    if any(db_key in key.lower() for db_key in ['database', 'db', 'postgres', 'sql']):
+        print(f"{key}: {'*' * len(value)}")  # Mask the actual values for security
+
 # Database configuration for Railway
 database_url = os.environ.get('DATABASE_URL')
 if not database_url:
-    PGUSER = os.environ.get('POSTGRES_USER') or os.environ.get('PGUSER')
-    PGPASSWORD = os.environ.get('POSTGRES_PASSWORD') or os.environ.get('PGPASSWORD')
-    PGHOST = os.environ.get('RAILWAY_PRIVATE_DOMAIN') or os.environ.get('PGHOST')
-    PGPORT = os.environ.get('PGPORT', '5432')
-    PGDATABASE = os.environ.get('POSTGRES_DB') or os.environ.get('PGDATABASE')
+    # Try to construct from individual components
+    db_components = {
+        'user': os.environ.get('PGUSER') or os.environ.get('POSTGRES_USER'),
+        'password': os.environ.get('PGPASSWORD') or os.environ.get('POSTGRES_PASSWORD'),
+        'host': os.environ.get('PGHOST') or os.environ.get('RAILWAY_PRIVATE_DOMAIN'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'name': os.environ.get('PGDATABASE') or os.environ.get('POSTGRES_DB', 'railway')
+    }
+    
+    # Print available components (masking sensitive data)
+    print("\nDatabase components found:")
+    for key, value in db_components.items():
+        if value:
+            if key in ['password']:
+                print(f"{key}: {'*' * len(value)}")
+            else:
+                print(f"{key}: {value}")
+        else:
+            print(f"{key}: NOT FOUND")
 
-    if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
-        database_url = f'postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
+    if all(db_components.values()):
+        database_url = f"postgresql://{db_components['user']}:{db_components['password']}@{db_components['host']}:{db_components['port']}/{db_components['name']}"
+        print("\nSuccessfully constructed database URL")
     else:
-        print("Error: Database configuration is incomplete")
-        print(f"PGUSER: {PGUSER}")
-        print(f"PGHOST: {PGHOST}")
-        print(f"PGPORT: {PGPORT}")
-        print(f"PGDATABASE: {PGDATABASE}")
+        missing = [k for k, v in db_components.items() if not v]
+        print(f"\nError: Missing database components: {', '.join(missing)}")
         sys.exit(1)
 
+print("\nAttempting to configure database with URL...")
 DATABASES = {
     'default': dj_database_url.config(
         default=database_url,
@@ -47,6 +66,7 @@ DATABASES = {
         engine='django.db.backends.postgresql'
     )
 }
+print("Database configuration completed")
 
 # Static files configuration
 STATIC_URL = '/static/'
