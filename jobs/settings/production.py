@@ -1,19 +1,34 @@
 import os
+import sys
 import dj_database_url
 from .base import *
+
+# Ensure we're in production environment
+if 'RAILWAY_ENVIRONMENT' not in os.environ:
+    print("Error: Production settings loaded but RAILWAY_ENVIRONMENT not found.")
+    print("If you're running locally, use: python manage.py runserver --settings=jobs.settings.local")
+    sys.exit(1)
 
 DEBUG = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    print("Error: DJANGO_SECRET_KEY environment variable is required in production")
+    sys.exit(1)
 
 # Configure allowed hosts
 ALLOWED_HOSTS = ['vacancy-management-system-production.up.railway.app']
 
 # Database configuration for Railway
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    print("Error: DATABASE_URL environment variable is required in production")
+    sys.exit(1)
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('RAILWAY_POSTGRESQL_CONNECTION_URL'),
+        default=database_url,
         conn_max_age=600
     )
 }
