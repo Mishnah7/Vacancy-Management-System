@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
 
-from jobsapp.models import Applicant, Job, JOB_TYPE, POSTING_TYPE
+from jobsapp.models import Applicant, Job, JOB_TYPE, POSTING_TYPE, Category
 
 
 class CreateJobForm(forms.ModelForm):
@@ -52,14 +52,7 @@ class CreateJobForm(forms.ModelForm):
             }, choices=JOB_TYPE),
             'category': forms.Select(attrs={
                 'class': 'form-control select2'
-            }, choices=[
-                ('web-design', 'Web Design'),
-                ('graphic-design', 'Graphic Design'),
-                ('web-development', 'Web Development'),
-                ('human-resource', 'Human Resources'),
-                ('support', 'Support'),
-                ('android', 'Android Development')
-            ]),
+            }),
             'last_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'

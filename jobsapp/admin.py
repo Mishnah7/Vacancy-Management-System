@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.flatpages.admin import FlatPageAdmin
 from django.contrib.flatpages.models import FlatPage
-from .models import Job, Applicant, Favorite, EmployeeProfile, ImportError, Audit
+from .models import Job, Applicant, Favorite, EmployeeProfile, ImportError, Audit, Category
 from django.utils.html import format_html, format_html_join
 from django.db.models import Q
 from django import forms
@@ -562,3 +562,11 @@ class AuditAdmin(admin.ModelAdmin):
         css = {
             'all': ('css/audit_admin.css',)
         }
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'created_at', 'updated_at')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
+    ordering = ('name',)
+
+admin.site.register(Category, CategoryAdmin)

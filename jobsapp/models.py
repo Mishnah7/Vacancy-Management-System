@@ -63,13 +63,28 @@ class EmployeeProfile(models.Model):
         ordering = ['file_no']
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Job(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300)
     description = models.TextField()
     location = models.CharField(max_length=150, blank=True, null=True)
     type = models.CharField(choices=JOB_TYPE, max_length=10, blank=True, null=True)
-    category = models.CharField(max_length=100, blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     last_date = models.DateTimeField(blank=True, null=True)
     company_name = models.CharField(max_length=100, blank=True, null=True)
     company_description = models.CharField(max_length=300, blank=True, null=True)
