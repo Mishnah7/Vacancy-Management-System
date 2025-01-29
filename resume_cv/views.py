@@ -9,14 +9,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView
-from weasyprint import HTML, CSS
-from weasyprint.text.fonts import FontConfiguration
 from django.views.decorators.clickjacking import xframe_options_deny
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django_ratelimit.decorators import ratelimit
+import pdfkit
+import os
+from django.template.loader import render_to_string
+from django.conf import settings
 
 from jobsapp.decorators import user_is_employee
 
@@ -27,6 +29,27 @@ from resume_cv.models import ResumeCvTemplate, ResumeCvCategory, ResumeCv
 from resume_cv.utils import sanitize_html
 
 logger = logging.getLogger(__name__)
+
+# Configure pdfkit to use wkhtmltopdf with absolute path
+config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
+
+# Replace WeasyPrint HTML/CSS imports with our new PDF generation function
+def generate_pdf(html_content, output_path):
+    try:
+        options = {
+            'page-size': 'A4',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            'encoding': "UTF-8",
+            'no-outline': None,
+            'quiet': ''
+        }
+        pdfkit.from_string(html_content, output_path, options=options, configuration=config)
+    except Exception as e:
+        logger.error(f"PDF generation error: {str(e)}")
+        raise
 
 class TemplateListView(ListView):
     """
@@ -219,10 +242,12 @@ def download_resume(request, id):
         """
         
         # Generate PDF
-        pdf = HTML(string=html_content).write_pdf()
+        pdf_path = os.path.join(settings.MEDIA_ROOT, 'resumes', f'resume_{resume.code}.pdf')
+        os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+        generate_pdf(html_content, pdf_path)
         
         # Create response
-        response = HttpResponse(pdf, content_type='application/pdf')
+        response = HttpResponse(open(pdf_path, 'rb'), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="resume_{resume.code}.pdf"'
         
         return response
@@ -236,13 +261,30 @@ def download_resume(request, id):
 def download_template(request, id):
     template = ResumeCvTemplate.objects.get(id=id)
     if template:
-        font_config = FontConfiguration()
-        css = CSS(
-            string=template.style,
-            font_config=font_config,
-        )
-        pdf_file = HTML(string=template.content, encoding="utf-8").write_pdf(stylesheets=[css], font_config=font_config)
-        response = HttpResponse(pdf_file, content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="{template.name}.pdf"'
+        # Combine HTML content with styles
+        html_content = f"""
+            <html>
+                <head>
+                    <style>{template.style}</style>
+                </head>
+                <body>{template.content}</body>
+            </html>
+        """
+        
+        # Generate PDF
+        pdf_path = os.path.join(settings.MEDIA_ROOT, 'templates', f'template_{template.id}.pdf')
+        os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+        generate_pdf(html_content, pdf_path)
+        
+        # Create response
+        response = HttpResponse(open(pdf_path, 'rb'), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{template.name}.pdf"'
         return response
     return redirect("resume_cv:templates")
+
+def generate_resume_pdf(request, template_path, context):
+    html = render_to_string(template_path, context)
+    pdf_path = os.path.join(settings.MEDIA_ROOT, 'resumes', f'resume_{context["user"].id}.pdf')
+    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+    generate_pdf(html, pdf_path)
+    return pdf_path

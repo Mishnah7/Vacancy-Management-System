@@ -16,6 +16,7 @@ from .views import (
     UpdateApplicantStatusAPIView,
     already_applied_api_view,
     categories_list_api_view,
+    JobDeleteAPIView,
 )
 
 router = DefaultRouter()
@@ -48,6 +49,7 @@ urlpatterns = [
             [
                 path("dashboard/", DashboardAPIView.as_view()),
                 path("jobs/create/", JobCreateAPIView.as_view()),
+                path("jobs/<int:job_id>/delete/", JobDeleteAPIView.as_view(), name='job-delete'),
                 path("applicants/", ApplicantsListAPIView.as_view()),
                 path("applicants/<int:job_id>/", ApplicantsPerJobListAPIView.as_view()),
                 path("applicants/<int:applicant_id>/<int:status_code>/update/", UpdateApplicantStatusAPIView.as_view()),

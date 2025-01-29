@@ -1,11 +1,21 @@
 from django.http import JsonResponse
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication
+from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework.exceptions import PermissionDenied
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+import logging
 
 from jobsapp.api.permissions import IsEmployer, IsJobCreator
 from jobsapp.api.serializers import ApplicantSerializer, DashboardJobSerializer, NewJobSerializer
-from jobsapp.models import Applicant
+from jobsapp.models import Applicant, Job
+
+logger = logging.getLogger(__name__)
 
 
 class DashboardAPIView(ListAPIView):
@@ -61,3 +71,67 @@ class UpdateApplicantStatusAPIView(APIView):
         applicant.save()
         data = {"message": "Applicant status updated"}
         return JsonResponse(data, status=200)
+
+
+class JobDeleteAPIView(DestroyAPIView):
+    queryset = Job.objects.all()
+    permission_classes = [IsAuthenticated, IsEmployer, IsJobCreator]
+    authentication_classes = [SessionAuthentication]
+    lookup_field = 'id'
+    lookup_url_kwarg = 'job_id'
+
+    def get_queryset(self):
+        return self.queryset.filter(user_id=self.request.user.id)
+
+    def get_object(self):
+        """
+        Override get_object to match the URL parameter with lookup field
+        """
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        job_id = self.kwargs[lookup_url_kwarg]
+        logger.info(f"Looking up job with ID: {job_id}")
+        logger.info(f"Current user: {self.request.user.id}, role: {self.request.user.role}")
+        
+        try:
+            obj = self.get_queryset().get(id=job_id)
+            logger.info(f"Found job: {obj.id}, owned by user: {obj.user_id}")
+            
+            # Manual permission check
+            if obj.user_id != self.request.user.id:
+                logger.warning(f"Permission denied: Job {obj.id} belongs to user {obj.user_id}, not {self.request.user.id}")
+                raise PermissionDenied("You do not have permission to delete this job")
+                
+            return obj
+        except Job.DoesNotExist:
+            logger.warning(f"Job {job_id} not found")
+            raise Http404("Job not found")
+        except Exception as e:
+            logger.error(f"Error getting job {job_id}: {str(e)}")
+            raise
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            logger.info(f"Deleting job {instance.id} by user {request.user.id}")
+            self.perform_destroy(instance)
+            return Response(
+                {"message": "Job deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+        except Http404:
+            return Response(
+                {"error": "Job not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PermissionDenied as e:
+            logger.warning(f"Permission denied for user {request.user.id}: {str(e)}")
+            return Response(
+                {"error": "You do not have permission to delete this job"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        except Exception as e:
+            logger.error(f"Error deleting job: {str(e)}")
+            return Response(
+                {"error": "Failed to delete job", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

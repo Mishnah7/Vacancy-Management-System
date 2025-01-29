@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block styles %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
     .dashboard-header {
         background: linear-gradient(135deg, var(--primary-blue), var(--primary-gold));
@@ -358,7 +359,7 @@
     </div>
 
     {% for job in jobs %}
-        <div class="job-card {% if job.user_id == request.user.id %}job-card--own{% endif %}" data-job-id="{{ job.id }}">
+        <div class="job-card{% if job.user_id == request.user.id %} job-card--own{% endif %}" data-job-id="{{ job.id }}">
             <div class="job-card__header">
                 <h3 class="job-card__title">
                     {{ job.title }}
@@ -480,6 +481,134 @@
 
 {% block scripts %}
 <script>
+    let jobToDelete = null;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Delete job function
+    function confirmDelete(jobId) {
+        jobToDelete = jobId;
+        deleteModal.show();
+    }
+    
+    // Handle delete confirmation
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (!jobToDelete) return;
+        
+        // Remove any existing alerts
+        document.querySelectorAll('.alert').forEach(alert => alert.remove());
+        
+        fetch(`/api/employer/jobs/${jobToDelete}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Failed to delete job');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Remove the job card from the DOM
+            const jobCard = document.querySelector(`.job-card[data-job-id="${jobToDelete}"]`);
+            if (jobCard) {
+                jobCard.remove();
+            }
+            
+            // Show success message
+            const container = document.querySelector('.container');
+            const searchBox = container.querySelector('.search-box');
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show';
+            successAlert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${data.message || 'Job posting deleted successfully'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            if (searchBox) {
+                container.insertBefore(successAlert, searchBox);
+            } else {
+                container.insertBefore(successAlert, container.firstChild);
+            }
+            
+            // Update stats
+            const activeJobsCount = document.querySelector('.stats-card__value');
+            if (activeJobsCount) {
+                const currentCount = parseInt(activeJobsCount.textContent);
+                if (!isNaN(currentCount) && currentCount > 0) {
+                    activeJobsCount.textContent = currentCount - 1;
+                }
+            }
+            
+            // Close modal
+            deleteModal.hide();
+            
+            // Reload page after successful deletion to update all stats
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            
+            // Show error message
+            const container = document.querySelector('.container');
+            const searchBox = container.querySelector('.search-box');
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>${error.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            if (searchBox) {
+                container.insertBefore(errorAlert, searchBox);
+            } else {
+                container.insertBefore(errorAlert, container.firstChild);
+            }
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                errorAlert.remove();
+            }, 5000);
+            
+            // If unauthorized, redirect to login
+            if (error.message.includes('permission') || error.message.includes('not authorized')) {
+                setTimeout(() => {
+                    window.location.href = '/login/';
+                }, 2000);
+            }
+        })
+        .finally(() => {
+            deleteModal.hide();
+            jobToDelete = null;
+        });
+    });
+
     // Job Search Functionality
     const searchInput = document.getElementById('jobSearch');
     const jobCards = document.querySelectorAll('.job-card');
@@ -515,92 +644,6 @@
             }
         } else if (noResultsDiv) {
             noResultsDiv.remove();
-        }
-    });
-
-    // Delete Confirmation
-    let jobToDelete = null;
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function confirmDelete(jobId) {
-        jobToDelete = jobId;
-        deleteModal.show();
-    }
-
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (jobToDelete) {
-            const csrftoken = getCookie('csrftoken');
-            
-            // Send delete request
-            fetch(`/api/jobs/${jobToDelete}/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Failed to delete job');
-                    });
-                }
-                // Remove the job card from the DOM
-                const jobCard = document.querySelector(`[data-job-id="${jobToDelete}"]`);
-                if (jobCard) {
-                    jobCard.remove();
-                }
-                
-                // Show success message
-                const successAlert = document.createElement('div');
-                successAlert.className = 'alert alert-success alert-dismissible fade show';
-                successAlert.innerHTML = `
-                    <i class="fas fa-check-circle me-2"></i>Job posting deleted successfully
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                document.querySelector('.container').insertBefore(successAlert, document.querySelector('.search-box'));
-                
-                // Auto dismiss after 3 seconds
-                setTimeout(() => {
-                    successAlert.remove();
-                }, 3000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Show error message
-                const errorAlert = document.createElement('div');
-                errorAlert.className = 'alert alert-danger alert-dismissible fade show';
-                errorAlert.innerHTML = `
-                    <i class="fas fa-exclamation-circle me-2"></i>${error.message || 'Error deleting job posting'}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                document.querySelector('.container').insertBefore(errorAlert, document.querySelector('.search-box'));
-                
-                // Auto dismiss after 3 seconds
-                setTimeout(() => {
-                    errorAlert.remove();
-                }, 3000);
-            })
-            .finally(() => {
-                deleteModal.hide();
-                jobToDelete = null;
-            });
         }
     });
 </script>

@@ -122,9 +122,9 @@ class JobCreateView(CreateView):
     @method_decorator(user_is_employer)
     def dispatch(self, request, *args, **kwargs):
         if not self.request.user.is_authenticated:
-            return reverse_lazy("accounts:login")
+            return HttpResponseRedirect(reverse_lazy("accounts:login"))
         if self.request.user.is_authenticated and self.request.user.role != "employer":
-            return reverse_lazy("accounts:login")
+            return HttpResponseRedirect(reverse_lazy("accounts:login"))
         return super().dispatch(self.request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -134,64 +134,22 @@ class JobCreateView(CreateView):
 
     def form_valid(self, form):
         try:
-            cleaned_data = form.cleaned_data
-            
+            form.instance.user = self.request.user
             # Clean and sanitize HTML content
-            if cleaned_data.get('description'):
-                cleaned_data['description'] = sanitize_html(cleaned_data['description'])
-            if cleaned_data.get('company_description'):
-                cleaned_data['company_description'] = sanitize_html(cleaned_data['company_description'])
+            if form.cleaned_data.get('description'):
+                form.instance.description = sanitize_html(form.cleaned_data['description'])
+            if form.cleaned_data.get('company_description'):
+                form.instance.company_description = sanitize_html(form.cleaned_data['company_description'])
             
-            # Validate required fields for external postings
-            if cleaned_data.get('posting_type') in ['external', 'both']:
-                if not cleaned_data.get('company_name'):
-                    form.add_error('company_name', 'Company name is required for external job postings')
-                    return self.form_invalid(form)
-            
-            # Create job using manager method
-            job = Job.objects.create_job(
-                user=self.request.user,
-                title=cleaned_data['title'],
-                description=cleaned_data['description'],
-                location=cleaned_data.get('location'),
-                type=cleaned_data.get('type'),
-                category=cleaned_data.get('category'),
-                last_date=cleaned_data.get('last_date'),
-                company_name=cleaned_data.get('company_name'),
-                company_description=cleaned_data.get('company_description'),
-                website=cleaned_data.get('website'),
-                salary=cleaned_data.get('salary'),
-                vacancy=cleaned_data.get('vacancy', 1),
-                posting_type=cleaned_data.get('posting_type', 'external')
-            )
-            
-            # Add tags
-            if cleaned_data.get('tags'):
-                job.tags.set(cleaned_data['tags'])
-            
+            response = super().form_valid(form)
             messages.success(self.request, "Job position created successfully!")
-            return HttpResponseRedirect(self.get_success_url())
-            
-        except ValidationError as e:
-            if hasattr(e, 'message_dict'):
-                for field, errors in e.message_dict.items():
-                    for error in errors:
-                        form.add_error(field, error)
-            else:
-                form.add_error(None, str(e))
-            return self.form_invalid(form)
-            
+            return response
         except Exception as e:
-            messages.error(self.request, f"An unexpected error occurred: {str(e)}")
+            messages.error(self.request, f"An error occurred: {str(e)}")
             return self.form_invalid(form)
 
     def form_invalid(self, form):
-        for field, errors in form.errors.items():
-            for error in errors:
-                if field == '__all__':
-                    messages.error(self.request, error)
-                else:
-                    messages.error(self.request, f"{form.fields[field].label}: {error}")
+        messages.error(self.request, "Please correct the errors below.")
         return super().form_invalid(form)
 
     def post(self, request, *args, **kwargs):

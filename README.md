@@ -2,105 +2,213 @@
 
 <img src="./screenshots/illustration.png" alt="Job Interview" width="300" height="356.5">
 
-# Django Job Portal
+# Birhan Bank VMS (Vacancy Management System)
 
 </div>
 
-## Django Job Portal
+## Features
 
-#### An open source online job portal.
+- Job posting and management
+- Resume builder with PDF generation
+- User authentication (local + social)
+- REST API with JWT authentication
+- GraphQL support
+- Advanced search functionality
+- Rate limiting
+- Security features (CSRF, XSS protection)
+- Employer and Employee dashboards
+- Application tracking system
+- PDF resume generation
 
-<p align="center">
-    <img alt="forks" src="https://img.shields.io/github/forks/manjurulhoque/django-job-portal?label=Forks&style=social"/>
-    <img alt="stars" src="https://img.shields.io/github/stars/manjurulhoque/django-job-portal?style=social"/>
-    <img alt="watchers" src="https://img.shields.io/github/watchers/manjurulhoque/django-job-portal?style=social"/>
-    <img alt="github Actions" src="https://github.com/manjurulhoque/django-job-portal/workflows/job-portal/badge.svg"/>
-</p>
+## Prerequisites
 
-Live: [Demo](https://django-job.herokuapp.com/) or [Second Demo](http://jobs.manjurulhoque.com/)
+- Python 3.8+
+- wkhtmltopdf (for PDF generation)
+- PostgreSQL (optional, SQLite configured for development)
 
-Used Tech Stack
+## Installation
 
-1. Django
-2. Sqlite
+1. **Clone the repository**
 
-### Screenshots
+```bash
+git clone <repository-url>
+cd Birhan_Bank_VMS
+```
 
-## Home page
-<img src="screenshots/one.png" height="800">
+2. **Create and activate virtual environment**
 
-## Resume template page
-<img src="screenshots/six.png" height="800">
-<img src="screenshots/seven.png" height="800">
+```bash
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+```
 
-## Login page
-<img src="screenshots/five.png" width="800" alt="login">
+3. **Install Python dependencies**
 
-## Add new position as employer
-<img src="screenshots/two.png" width="800" alt="form">
+```bash
+pip install -r requirements.txt
+```
 
-## Job details
-<img src="screenshots/three.png" height="800" alt="details">
+4. **Install System Dependencies**
 
-## Swagger API
-<img src="screenshots/four.png" height="800">
+- Download and install wkhtmltopdf:
+  - Visit <https://wkhtmltopdf.org/downloads.html>
+  - Download Windows installer (64-bit)
+  - Install and add to PATH during installation
 
-<a name="local-venv"></a>
-### Local environment
+5. **Create required directories**
 
-#### Install
+```bash
+mkdir static mediafiles
+mkdir mediafiles\resumes
+mkdir mediafiles\templates
+```
 
-1. Create a virtual environment
+6. **Environment Setup**
 
-    `virtualenv venv`
+Create a `.env` file in the project root:
 
-    Or
+```env
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=sqlite:///db.sqlite3
+DJANGO_SETTINGS_MODULE=jobs.settings.local
+ELASTIC_HOST_NAME=localhost
+ELASTIC_HOST_PORT=9200
+ENABLE_PROMETHEUS=False
 
-    `python3.11 -m venv venv`
+# Social Auth (optional)
+SOCIAL_AUTH_GITHUB_KEY=your-github-key
+SOCIAL_AUTH_GITHUB_SECRET=your-github-secret
+SOCIAL_AUTH_FACEBOOK_KEY=your-facebook-key
+SOCIAL_AUTH_FACEBOOK_SECRET=your-facebook-secret
+```
 
-2. Activate it
+7. **Initialize the Database**
 
-    `source venv/bin/activate`
+```bash
+python manage.py migrate
+```
 
-3. Clone the repository and install the packages in the virtual env:
+8. **Create a superuser**
 
-    `pip install -r requirements.txt`
+```bash
+python manage.py createsuperuser
+```
 
-4. Add `.env` file.
+9. **Run the development server**
 
-    `cp .env.dev.sample .env`
+```bash
+python manage.py runserver
+```
 
-5. Add Github client ID and client secret in the `.env` file
+The application will be available at <http://127.0.0.1:8000/>
 
-#### Run
+## Project Structure
 
-1. With the venv activate it, execute:
+```
+Birhan_Bank_VMS/
+├── accounts/          # User authentication and profiles
+├── jobsapp/          # Core job posting and management
+├── resume_cv/        # Resume builder functionality
+├── tags/            # Job tagging system
+├── static/          # Static files
+├── mediafiles/      # User uploaded files
+└── templates/       # HTML templates
+```
 
-    python manage.py collectstatic
+## Dependencies
 
-   *Note* : Collect static is not necessary when debug is True (in dev mode)
+The project uses the following major packages:
 
-2. Create initial database:
+```txt
+# Core dependencies
+Django==5.1.2
+djangorestframework==3.15.2
+django-cors-headers==4.4.0
+django-environ==0.11.2
+django-oauth-toolkit==3.0.1
+djangorestframework-simplejwt==5.3.1
+django-rest-framework-social-oauth2==1.2.0
+django-prometheus==2.3.1
+django-ratelimit==4.1.0
 
-    `python manage.py migrate`
+# Database
+psycopg2-binary==2.9.9
 
-3. Load demo data (optional):
+# Authentication and OAuth
+PyJWT==2.9.0
+social-auth-app-django==5.4.2
 
-    `python manage.py loaddata fixtures/app_name_initial_data.json --app app.model_name`
+# PDF Generation
+pdfkit==1.0.0
 
-4. Run server:
+# And more... (see requirements.txt for complete list)
+```
 
-    `python manage.py runserver`
+## Optional Components
 
-5. Default django admin credentials:
+1. **Elasticsearch Setup** (for advanced search)
 
-    `email: admin@admin.com`
-    `password: admin`
+   - Download and install Elasticsearch
+   - Configure in settings
+   - Run Elasticsearch service
 
-#### Run test:
-``python manage.py test``
+2. **Redis Setup** (for caching)
 
-#### To dump data:
-``python manage.py dumpdata --format=json --indent 4 app_name > app_name/fixtures/app_name_initial_data.json``
+   - Download and install Redis
+   - Configure in settings
 
-Show your support by 🌟 the project!!
+3. **Email Configuration** (for production)
+   - Configure SMTP settings in settings.py
+
+## API Documentation
+
+- REST API documentation available at `/api/swagger`
+- GraphQL interface available at `/graphql`
+
+## Security Features
+
+- CSRF protection
+- XSS protection through content sanitization
+- Rate limiting
+- JWT authentication
+- Secure password hashing
+- Input validation and sanitization
+
+## Development
+
+For development work:
+
+```bash
+# Install development dependencies
+pip install black==24.10.0 pre-commit==4.0.1 isort==5.13.2
+
+# Set up pre-commit hooks
+pre-commit install
+```
+
+## Production Deployment
+
+Additional steps for production:
+
+1. Set DEBUG=False in settings
+2. Configure proper database (PostgreSQL recommended)
+3. Set up proper email backend
+4. Configure static files serving
+5. Set up proper web server (Gunicorn + Nginx recommended)
+6. Configure SSL/TLS
+7. Set up proper caching
+
+## License
+
+[Your License Here]
+
+## Contributing
+
+[Your Contributing Guidelines]
+
+## Support
+
+[Your Support Information]
