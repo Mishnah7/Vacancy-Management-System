@@ -2,7 +2,7 @@ from .base import *
 
 # Debug settings
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Database settings
 DATABASES = {
@@ -22,12 +22,12 @@ SECRET_KEY = 'django-insecure-development-key-for-local-use-only'
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'mediafiles'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 # Prometheus settings
 ENABLE_PROMETHEUS = False

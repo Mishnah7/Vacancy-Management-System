@@ -8,12 +8,12 @@ DEBUG = False
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # Configure allowed hosts
-ALLOWED_HOSTS = ['*']  # Configure based on your Railway domain
+ALLOWED_HOSTS = ['vacancy-management-system-production.up.railway.app']
 
 # Database configuration for Railway
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+        default=os.environ.get('RAILWAY_POSTGRESQL_CONNECTION_URL'),
         conn_max_age=600
     )
 }
@@ -36,10 +36,8 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 X_FRAME_OPTIONS = 'DENY'
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
-    # Add your frontend domains here
-]
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = ['https://vacancy-management-system-production.up.railway.app']
 
 # Logging configuration
 LOGGING = {
