@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set up environment file
-RUN cp .env.dev.sample .env || echo "DEBUG=False\nSECRET_KEY=your-secret-key-here\nALLOWED_HOSTS=.railway.app" > .env
+RUN cp .env.example .env || echo "DEBUG=False\nSECRET_KEY=your-secret-key-here\nALLOWED_HOSTS=.railway.app" > .env
 
 # Create necessary directories
 RUN mkdir -p /app/staticfiles /app/mediafiles
