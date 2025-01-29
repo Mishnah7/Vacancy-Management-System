@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "python manage.py collectstatic --noinput"
+
+[deploy]
+startCommand = "gunicorn jobs.wsgi:application"
+healthcheckPath = "/admin/login/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[service]
+internal_port = 8000 
