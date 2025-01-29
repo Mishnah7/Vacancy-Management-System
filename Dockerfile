@@ -5,22 +5,28 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY requirements.txt requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    netcat-traditional \
+    && rm -rf /var/lib/apt/lists/*
 
-# RUN python -m pip install --upgrade pip
-RUN pip install -r requirements.txt
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy project files
 COPY . .
 
-RUN cp .env.dev.sample .env
+# Create necessary directories
+RUN mkdir -p /app/staticfiles /app/mediafiles
 
-#EXPOSE 8000
-
+# Make entrypoint executable
 RUN chmod +x entrypoint.sh
 
+# Set environment variables
+ENV PORT=8000
 ENV APP_HOME=/app
-ENV DEBUG=1
-RUN mkdir $APP_HOME/staticfiles
-RUN mkdir $APP_HOME/mediafiles
+ENV DJANGO_SETTINGS_MODULE=jobs.settings.production
 
-CMD ["sh", "entrypoint.sh"]
+# Run entrypoint script
+CMD ["./entrypoint.sh"]

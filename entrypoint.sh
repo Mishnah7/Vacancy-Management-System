@@ -1,5 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
+# Wait for database to be ready
+echo "Waiting for PostgreSQL..."
+while ! nc -z $PGHOST $PGPORT; do
+    sleep 0.1
+done
+echo "PostgreSQL started"
+
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Apply database migrations
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-#/usr/local/bin/gunicorn jobs.wsgi:application -w 2 -b :8000
+
+# Start Gunicorn
+gunicorn jobs.wsgi:application --bind 0.0.0.0:$PORT
