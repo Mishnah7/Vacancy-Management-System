@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "jobsapp.middleware.SessionTimeoutMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -304,7 +305,7 @@ if ENABLE_PROMETHEUS:
     # django_prometheus is already in INSTALLED_APPS, no need to add it again
     MIDDLEWARE = (
         ["django_prometheus.middleware.PrometheusBeforeMiddleware"]
-        + MIDDLEWARE
+        + [m for m in MIDDLEWARE if not m.startswith("django_prometheus")]
         + ["django_prometheus.middleware.PrometheusAfterMiddleware"]
     )
     
@@ -328,10 +329,17 @@ SITE_DOMAIN = '127.0.0.1:8000'  # Development domain
 
 # Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_AGE = 28800  # 8 hours in seconds
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Session timeout settings
+SESSION_IDLE_TIMEOUT = 1800  # 30 minutes in seconds
+SESSION_SECURITY_WARN_AFTER = 1500  # Show warning 5 minutes before timeout
 
 # CSRF settings
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
