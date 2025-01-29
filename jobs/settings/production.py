@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
     '.up.railway.app',  # Allow all Railway subdomains
     'localhost',
     '127.0.0.1',
+    '0.0.0.0',
 ]
 
 # Database configuration for Railway
