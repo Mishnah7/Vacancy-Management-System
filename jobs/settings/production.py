@@ -26,10 +26,17 @@ if not database_url:
     print("Error: DATABASE_URL environment variable is required in production")
     sys.exit(1)
 
+# Use internal connection URL if available to avoid egress fees
+internal_db_url = os.environ.get('PGDATA')
+if internal_db_url:
+    database_url = internal_db_url
+
 DATABASES = {
     'default': dj_database_url.config(
         default=database_url,
-        conn_max_age=600
+        conn_max_age=600,
+        conn_health_checks=True,
+        engine='django.db.backends.postgresql'
     )
 }
 
@@ -66,5 +73,12 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 } 
