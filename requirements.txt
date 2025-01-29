@@ -10,8 +10,8 @@ django-prometheus==2.3.1
 django-ratelimit==4.1.0
 
 # Database
-psycopg2-binary==2.9.9
-dj-database-url==2.1.0
+psycopg2-binary==2.9.10
+dj-database-url==2.3.0
 
 # Authentication and OAuth
 PyJWT==2.9.0
