@@ -32,3 +32,8 @@ staticfiles/
 # Misc
 .DS_Store
 Thumbs.db
+
+# Data backups
+*_data.json
+db_backup.json
+data.json

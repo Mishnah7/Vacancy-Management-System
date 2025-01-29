@@ -11,6 +11,9 @@ from django.http import HttpResponseRedirect
 from django.urls import path
 from django.core.management import call_command
 from django.template.response import TemplateResponse
+import csv
+from django.core.exceptions import ValidationError
+from datetime import datetime
 
 # Register your models here.
 
@@ -46,6 +49,12 @@ class ImportEmployeesForm(forms.Form):
         initial=False,
         label='Clear Existing Data',
         help_text='WARNING: This will delete all existing employee records before import'
+    )
+
+class JobImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label='CSV File',
+        help_text='Upload a CSV file with job data'
     )
 
 @admin.register(EmployeeProfile)
@@ -265,10 +274,11 @@ class EmployeeProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('title', 'company_name', 'type', 'category', 'posting_type', 'last_date', 'filled')
+    list_display = ('title', 'company_name', 'type', 'category', 'posting_type', 'last_date', 'filled', 'created_at')
     list_filter = ('type', 'category', 'posting_type', 'filled', 'created_at')
     search_fields = ('title', 'company_name', 'category', 'description')
     date_hierarchy = 'created_at'
+    actions = ['export_as_csv', 'mark_as_filled', 'mark_as_unfilled']
     
     fieldsets = (
         ('Basic Information', {
@@ -304,9 +314,99 @@ class JobAdmin(admin.ModelAdmin):
     
     readonly_fields = ('created_at',)
     filter_horizontal = ('tags',)
-    
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('import-jobs/', self.admin_site.admin_view(self.import_jobs_view), name='import-jobs'),
+        ]
+        return custom_urls + urls
+
+    def import_jobs_view(self, request):
+        if request.method == 'POST':
+            form = JobImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                csv_file = request.FILES['csv_file']
+                decoded_file = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.DictReader(decoded_file)
+                
+                success_count = 0
+                error_count = 0
+                errors = []
+
+                for row in reader:
+                    try:
+                        # Convert date string to datetime object
+                        last_date = datetime.strptime(row.get('last_date', ''), '%Y-%m-%d').date() if row.get('last_date') else None
+                        
+                        job = Job(
+                            title=row.get('title', ''),
+                            description=row.get('description', ''),
+                            type=row.get('type', 'full_time'),
+                            category=row.get('category', ''),
+                            location=row.get('location', ''),
+                            salary=row.get('salary', ''),
+                            company_name=row.get('company_name', ''),
+                            company_description=row.get('company_description', ''),
+                            website=row.get('website', ''),
+                            last_date=last_date,
+                            filled=row.get('filled', '').lower() == 'true',
+                            vacancy=int(row.get('vacancy', 1)),
+                            posting_type=row.get('posting_type', 'internal'),
+                            user=request.user
+                        )
+                        job.full_clean()
+                        job.save()
+                        success_count += 1
+                    except Exception as e:
+                        error_count += 1
+                        errors.append(f"Row {reader.line_num}: {str(e)}")
+
+                if success_count:
+                    messages.success(request, f'Successfully imported {success_count} jobs.')
+                if error_count:
+                    messages.error(request, f'Failed to import {error_count} jobs. Check the error log for details.')
+                    for error in errors:
+                        messages.error(request, error)
+
+                return HttpResponseRedirect('../')
+        else:
+            form = JobImportForm()
+
+        context = {
+            'title': 'Import Jobs',
+            'form': form,
+            'opts': self.model._meta,
+        }
+        return TemplateResponse(request, 'admin/jobsapp/job/import_form.html', context)
+
+    def export_as_csv(self, request, queryset):
+        meta = self.model._meta
+        field_names = [field.name for field in meta.fields]
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+        writer = csv.writer(response)
+
+        writer.writerow(field_names)
+        for obj in queryset:
+            writer.writerow([getattr(obj, field) for field in field_names])
+
+        return response
+    export_as_csv.short_description = "Export selected jobs as CSV"
+
+    def mark_as_filled(self, request, queryset):
+        updated = queryset.update(filled=True)
+        messages.success(request, f'{updated} jobs marked as filled.')
+    mark_as_filled.short_description = "Mark selected jobs as filled"
+
+    def mark_as_unfilled(self, request, queryset):
+        updated = queryset.update(filled=False)
+        messages.success(request, f'{updated} jobs marked as unfilled.')
+    mark_as_unfilled.short_description = "Mark selected jobs as unfilled"
+
     def save_model(self, request, obj, form, change):
-        if not change:  # Only set the user during creation
+        if not change:  # If this is a new object
             obj.user = request.user
         super().save_model(request, obj, form, change)
 
