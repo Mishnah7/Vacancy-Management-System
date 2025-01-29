@@ -27,48 +27,40 @@ for key, value in os.environ.items():
         print(f"{key}: {'*' * len(value)}")  # Mask the actual values for security
 
 # Database configuration for Railway
-database_url = os.environ.get('DATABASE_URL')  # This should use the private domain by default
+print("\nChecking database configuration...")
 
-if not database_url:
-    # Try to construct internal URL to avoid egress fees
-    db_components = {
-        'user': os.environ.get('POSTGRES_USER', 'postgres'),
-        'password': os.environ.get('POSTGRES_PASSWORD'),
-        'host': os.environ.get('RAILWAY_PRIVATE_DOMAIN'),
-        'port': '5432',
-        'name': os.environ.get('POSTGRES_DB', 'railway')
-    }
-    
-    # Print available components (masking sensitive data)
-    print("\nDatabase components found:")
-    for key, value in db_components.items():
-        if value:
-            if key in ['password']:
-                print(f"{key}: {'*' * len(value)}")
-            else:
-                print(f"{key}: {value}")
-        else:
-            print(f"{key}: NOT FOUND")
+# First try DATABASE_URL
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    print("Using DATABASE_URL for connection")
+else:
+    print("DATABASE_URL not found, constructing from components...")
+    # Try to construct internal URL
+    db_host = os.environ.get('RAILWAY_PRIVATE_DOMAIN', 'localhost')
+    db_port = os.environ.get('PGPORT', '5432')
+    db_name = os.environ.get('POSTGRES_DB', 'railway')
+    db_user = os.environ.get('POSTGRES_USER', 'postgres')
+    db_password = os.environ.get('POSTGRES_PASSWORD')
 
-    if all(db_components.values()):
-        # Use internal connection to avoid egress fees
-        database_url = f"postgresql://{db_components['user']}:{db_components['password']}@{db_components['host']}:5432/{db_components['name']}"
-        print("\nSuccessfully constructed internal database URL")
-    else:
-        missing = [k for k, v in db_components.items() if not v]
-        print(f"\nError: Missing database components: {', '.join(missing)}")
+    if not db_password:
+        print("Error: Database password not found!")
         sys.exit(1)
 
-print("\nAttempting to configure database with internal URL...")
+    database_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    print(f"Database host: {db_host}")
+    print(f"Database port: {db_port}")
+    print(f"Database name: {db_name}")
+    print(f"Database user: {db_user}")
+
+print("Configuring database connection...")
 DATABASES = {
     'default': dj_database_url.config(
         default=database_url,
         conn_max_age=60,
         conn_health_checks=True,
-        engine='django.db.backends.postgresql'
+        ssl_require=False,  # Disable SSL for internal connections
     )
 }
-print("Database configuration completed")
 
 # Static files configuration
 STATIC_URL = '/static/'
@@ -112,17 +104,17 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'DEBUG',  # Set root logger to DEBUG
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'django.db.backends': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',  # Set to DEBUG to see database queries
             'propagate': False,
         },
         'django.request': {
