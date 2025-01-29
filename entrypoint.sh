@@ -1,66 +1,66 @@
 #!/bin/sh
 
-echo "Starting application setup..."
+set -e  # Exit on error
 
-# Print environment information
-echo "\nEnvironment Information:"
-echo "RAILWAY_PRIVATE_DOMAIN: $RAILWAY_PRIVATE_DOMAIN"
-echo "DATABASE_URL exists: $(if [ ! -z "$DATABASE_URL" ]; then echo "yes"; else echo "no"; fi)"
-echo "POSTGRES_DB: $POSTGRES_DB"
-echo "PORT: $PORT"
+echo "[$(date)] Starting application setup..."
 
-# Determine database host
-DB_HOST=${RAILWAY_PRIVATE_DOMAIN:-localhost}
-DB_PORT=${PGPORT:-5432}
+# Function to check if PostgreSQL is ready
+check_db() {
+    nc -z -w2 "$1" "$2"
+    return $?
+}
 
-echo "\nDatabase Connection Info:"
-echo "Database Host: $DB_HOST"
-echo "Database Port: $DB_PORT"
+# Function to wait for PostgreSQL
+wait_for_db() {
+    echo "[$(date)] Waiting for PostgreSQL..."
+    local retries=30
+    local host="${RAILWAY_PRIVATE_DOMAIN:-localhost}"
+    local port="${PGPORT:-5432}"
 
-# Wait for database to be ready
-echo "\nWaiting for PostgreSQL..."
-max_retries=30
-counter=0
+    while [ "$retries" -gt 0 ]; do
+        if check_db "$host" "$port"; then
+            echo "[$(date)] PostgreSQL is available!"
+            return 0
+        fi
+        retries=$((retries - 1))
+        echo "[$(date)] Waiting for PostgreSQL... ($retries attempts left)"
+        sleep 2
+    done
 
-while ! nc -z $DB_HOST $DB_PORT; do
-    counter=$((counter + 1))
-    if [ $counter -ge $max_retries ]; then
-        echo "Error: PostgreSQL did not become available in time"
-        echo "Last attempt details:"
-        echo "Host: $DB_HOST"
-        echo "Port: $DB_PORT"
-        exit 1
-    fi
-    echo "Attempt $counter of $max_retries: PostgreSQL is not available yet..."
-    sleep 2
-done
-echo "PostgreSQL is now available!"
+    echo "[$(date)] Failed to connect to PostgreSQL after multiple attempts!"
+    return 1
+}
 
-# Create directories if they don't exist
-echo "\nSetting up directories..."
-mkdir -p /app/staticfiles
-mkdir -p /app/mediafiles
-echo "Directories created successfully"
+# Setup directories
+echo "[$(date)] Setting up directories..."
+mkdir -p /app/staticfiles /app/mediafiles
 
-# Collect static files
-echo "\nCollecting static files..."
-python manage.py collectstatic --noinput --clear
-echo "Static files collected successfully"
+# Wait for database
+wait_for_db || exit 1
 
-# Run database migrations
-echo "\nRunning database migrations..."
-python manage.py migrate --noinput
-echo "Migrations completed successfully"
+# Django setup
+echo "[$(date)] Running Django setup..."
+
+echo "[$(date)] Collecting static files..."
+python manage.py collectstatic --noinput --clear || {
+    echo "[$(date)] Failed to collect static files!"
+    exit 1
+}
+
+echo "[$(date)] Running database migrations..."
+python manage.py migrate --noinput || {
+    echo "[$(date)] Failed to run migrations!"
+    exit 1
+}
 
 # Start Gunicorn
-echo "\nStarting Gunicorn..."
+echo "[$(date)] Starting Gunicorn..."
 exec gunicorn jobs.wsgi:application \
-    --bind 0.0.0.0:$PORT \
+    --bind "0.0.0.0:${PORT:-8000}" \
     --workers 2 \
     --threads 2 \
     --timeout 60 \
     --access-logfile - \
     --error-logfile - \
-    --log-level debug \
-    --capture-output \
-    --reload
+    --log-level info \
+    --capture-output

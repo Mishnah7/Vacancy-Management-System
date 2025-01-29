@@ -9,7 +9,7 @@ if 'RAILWAY_ENVIRONMENT' not in os.environ:
     print("If you're running locally, use: python manage.py runserver --settings=jobs.settings.local")
     sys.exit(1)
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
@@ -18,7 +18,12 @@ if not SECRET_KEY:
     sys.exit(1)
 
 # Configure allowed hosts
-ALLOWED_HOSTS = ['*']  # Temporarily allow all hosts for debugging
+ALLOWED_HOSTS = [
+    '.railway.app',
+    'localhost',
+    '127.0.0.1',
+    '*',  # Temporarily allow all hosts
+]
 
 # Print all environment variables for debugging
 print("Available environment variables:")
@@ -31,26 +36,9 @@ print("\nChecking database configuration...")
 
 # First try DATABASE_URL
 database_url = os.environ.get('DATABASE_URL')
-if database_url:
-    print("Using DATABASE_URL for connection")
-else:
-    print("DATABASE_URL not found, constructing from components...")
-    # Try to construct internal URL
-    db_host = os.environ.get('RAILWAY_PRIVATE_DOMAIN', 'localhost')
-    db_port = os.environ.get('PGPORT', '5432')
-    db_name = os.environ.get('POSTGRES_DB', 'railway')
-    db_user = os.environ.get('POSTGRES_USER', 'postgres')
-    db_password = os.environ.get('POSTGRES_PASSWORD')
-
-    if not db_password:
-        print("Error: Database password not found!")
-        sys.exit(1)
-
-    database_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    print(f"Database host: {db_host}")
-    print(f"Database port: {db_port}")
-    print(f"Database name: {db_name}")
-    print(f"Database user: {db_user}")
+if not database_url:
+    print("Error: DATABASE_URL environment variable is required")
+    sys.exit(1)
 
 print("Configuring database connection...")
 DATABASES = {
@@ -58,7 +46,6 @@ DATABASES = {
         default=database_url,
         conn_max_age=60,
         conn_health_checks=True,
-        ssl_require=False,  # Disable SSL for internal connections
     )
 }
 
@@ -71,10 +58,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
-# Security settings
-SECURE_SSL_REDIRECT = False  # Temporarily disable for debugging
-SESSION_COOKIE_SECURE = False  # Temporarily disable for debugging
-CSRF_COOKIE_SECURE = False  # Temporarily disable for debugging
+# Security settings (temporarily disabled for debugging)
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -82,8 +69,8 @@ X_FRAME_OPTIONS = 'DENY'
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.railway.app',  # Allow all Railway subdomains
-    'http://*.railway.app',   # Temporarily allow HTTP for debugging
+    'https://*.railway.app',
+    'http://*.railway.app',
 ]
 
 # Logging configuration
@@ -92,8 +79,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+            'format': '[%(levelname)s] %(asctime)s %(name)s:%(lineno)d %(message)s'
         },
     },
     'handlers': {
@@ -102,34 +88,15 @@ LOGGING = {
             'formatter': 'verbose',
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',  # Set root logger to DEBUG
-    },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+            'level': 'INFO',
+            'propagate': True,
         },
         'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # Set to DEBUG to see database queries
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'DEBUG',  # Set to DEBUG to see more details
-            'propagate': False,
-        },
-        'gunicorn.access': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'gunicorn.error': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'ERROR',
             'propagate': False,
         },
     },
