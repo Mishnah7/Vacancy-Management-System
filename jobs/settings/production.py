@@ -27,15 +27,16 @@ for key, value in os.environ.items():
         print(f"{key}: {'*' * len(value)}")  # Mask the actual values for security
 
 # Database configuration for Railway
-database_url = os.environ.get('DATABASE_URL')
+database_url = os.environ.get('DATABASE_URL')  # This should use the private domain by default
+
 if not database_url:
-    # Try to construct from individual components
+    # Try to construct internal URL to avoid egress fees
     db_components = {
-        'user': os.environ.get('PGUSER') or os.environ.get('POSTGRES_USER'),
-        'password': os.environ.get('PGPASSWORD') or os.environ.get('POSTGRES_PASSWORD'),
-        'host': os.environ.get('PGHOST') or os.environ.get('RAILWAY_PRIVATE_DOMAIN'),
-        'port': os.environ.get('PGPORT', '5432'),
-        'name': os.environ.get('PGDATABASE') or os.environ.get('POSTGRES_DB', 'railway')
+        'user': os.environ.get('POSTGRES_USER', 'postgres'),
+        'password': os.environ.get('POSTGRES_PASSWORD'),
+        'host': os.environ.get('RAILWAY_PRIVATE_DOMAIN'),
+        'port': '5432',
+        'name': os.environ.get('POSTGRES_DB', 'railway')
     }
     
     # Print available components (masking sensitive data)
@@ -50,14 +51,15 @@ if not database_url:
             print(f"{key}: NOT FOUND")
 
     if all(db_components.values()):
-        database_url = f"postgresql://{db_components['user']}:{db_components['password']}@{db_components['host']}:{db_components['port']}/{db_components['name']}"
-        print("\nSuccessfully constructed database URL")
+        # Use internal connection to avoid egress fees
+        database_url = f"postgresql://{db_components['user']}:{db_components['password']}@{db_components['host']}:5432/{db_components['name']}"
+        print("\nSuccessfully constructed internal database URL")
     else:
         missing = [k for k, v in db_components.items() if not v]
         print(f"\nError: Missing database components: {', '.join(missing)}")
         sys.exit(1)
 
-print("\nAttempting to configure database with URL...")
+print("\nAttempting to configure database with internal URL...")
 DATABASES = {
     'default': dj_database_url.config(
         default=database_url,

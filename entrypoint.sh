@@ -2,10 +2,9 @@
 
 # Print environment information
 echo "Environment Information:"
-echo "PGHOST: $PGHOST"
-echo "PGPORT: $PGPORT"
-echo "PGUSER: $PGUSER"
-echo "PGDATABASE: $PGDATABASE"
+echo "RAILWAY_PRIVATE_DOMAIN: $RAILWAY_PRIVATE_DOMAIN"
+echo "POSTGRES_USER: $POSTGRES_USER"
+echo "POSTGRES_DB: $POSTGRES_DB"
 echo "DATABASE_URL exists: $(if [ ! -z "$DATABASE_URL" ]; then echo "yes"; else echo "no"; fi)"
 
 # Wait for database to be ready
@@ -13,12 +12,11 @@ echo "Waiting for PostgreSQL..."
 max_retries=30
 counter=0
 
-while ! nc -z $PGHOST $PGPORT; do
+while ! nc -z $RAILWAY_PRIVATE_DOMAIN 5432; do
     counter=$((counter + 1))
     if [ $counter -ge $max_retries ]; then
         echo "Error: PostgreSQL did not become available in time"
-        echo "PGHOST: $PGHOST"
-        echo "PGPORT: $PGPORT"
+        echo "RAILWAY_PRIVATE_DOMAIN: $RAILWAY_PRIVATE_DOMAIN"
         exit 1
     fi
     echo "Attempt $counter of $max_retries: PostgreSQL is not available yet..."
