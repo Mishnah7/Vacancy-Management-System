@@ -21,11 +21,11 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '.railway.app').split(',')
 
 # Database configuration for Railway
-PGUSER = os.environ.get('PGUSER')
-PGPASSWORD = os.environ.get('PGPASSWORD')  # Changed from POSTGRES_PASSWORD
-PGHOST = os.environ.get('PGHOST')
-PGPORT = os.environ.get('PGPORT')
-PGDATABASE = os.environ.get('PGDATABASE')
+PGUSER = os.environ.get('POSTGRES_USER') or os.environ.get('PGUSER')
+PGPASSWORD = os.environ.get('POSTGRES_PASSWORD') or os.environ.get('PGPASSWORD')
+PGHOST = os.environ.get('RAILWAY_PRIVATE_DOMAIN') or os.environ.get('PGHOST')
+PGPORT = os.environ.get('PGPORT', '5432')
+PGDATABASE = os.environ.get('POSTGRES_DB') or os.environ.get('PGDATABASE')
 
 if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
     database_url = f'postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
