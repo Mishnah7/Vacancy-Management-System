@@ -7,7 +7,7 @@ from django.db.models import Q
 from django import forms
 from django.shortcuts import render
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import path
 from django.core.management import call_command
 from django.template.response import TemplateResponse
