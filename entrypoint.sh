@@ -3,15 +3,27 @@
 # Wait for database to be ready
 echo "Waiting for PostgreSQL..."
 while ! nc -z $PGHOST $PGPORT; do
-    sleep 0.1
+    sleep 1
+    echo "Still waiting for PostgreSQL..."
 done
-echo "PostgreSQL started"
+echo "PostgreSQL started successfully"
 
-# Collect static files
-python manage.py collectstatic --noinput
+# Create directories if they don't exist
+mkdir -p /app/staticfiles
+mkdir -p /app/mediafiles
 
-# Apply database migrations
-python manage.py migrate
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear
 
-# Start Gunicorn
-gunicorn jobs.wsgi:application --bind 0.0.0.0:$PORT
+echo "Running database migrations..."
+python manage.py migrate --noinput
+
+echo "Starting Gunicorn..."
+exec gunicorn jobs.wsgi:application \
+    --bind 0.0.0.0:$PORT \
+    --workers 2 \
+    --threads 2 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info

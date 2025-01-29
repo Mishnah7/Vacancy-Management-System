@@ -18,22 +18,25 @@ if not SECRET_KEY:
     sys.exit(1)
 
 # Configure allowed hosts
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '.railway.app').split(',')
+ALLOWED_HOSTS = ['*']  # Temporarily allow all hosts for debugging
 
 # Database configuration for Railway
-PGUSER = os.environ.get('POSTGRES_USER') or os.environ.get('PGUSER')
-PGPASSWORD = os.environ.get('POSTGRES_PASSWORD') or os.environ.get('PGPASSWORD')
-PGHOST = os.environ.get('RAILWAY_PRIVATE_DOMAIN') or os.environ.get('PGHOST')
-PGPORT = os.environ.get('PGPORT', '5432')
-PGDATABASE = os.environ.get('POSTGRES_DB') or os.environ.get('PGDATABASE')
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    PGUSER = os.environ.get('POSTGRES_USER') or os.environ.get('PGUSER')
+    PGPASSWORD = os.environ.get('POSTGRES_PASSWORD') or os.environ.get('PGPASSWORD')
+    PGHOST = os.environ.get('RAILWAY_PRIVATE_DOMAIN') or os.environ.get('PGHOST')
+    PGPORT = os.environ.get('PGPORT', '5432')
+    PGDATABASE = os.environ.get('POSTGRES_DB') or os.environ.get('PGDATABASE')
 
-if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
-    database_url = f'postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-else:
-    # Fallback to DATABASE_URL if any of the components are missing
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        print("Error: Neither internal PostgreSQL variables nor DATABASE_URL are properly set")
+    if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
+        database_url = f'postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
+    else:
+        print("Error: Database configuration is incomplete")
+        print(f"PGUSER: {PGUSER}")
+        print(f"PGHOST: {PGHOST}")
+        print(f"PGPORT: {PGPORT}")
+        print(f"PGDATABASE: {PGDATABASE}")
         sys.exit(1)
 
 DATABASES = {
@@ -55,9 +58,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 # Security settings
-SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True') == 'True'
-SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'True') == 'True'
-CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'True') == 'True'
+SECURE_SSL_REDIRECT = False  # Temporarily disable for debugging
+SESSION_COOKIE_SECURE = False  # Temporarily disable for debugging
+CSRF_COOKIE_SECURE = False  # Temporarily disable for debugging
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -66,6 +69,7 @@ X_FRAME_OPTIONS = 'DENY'
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',  # Allow all Railway subdomains
+    'http://*.railway.app',   # Temporarily allow HTTP for debugging
 ]
 
 # Logging configuration
@@ -74,7 +78,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
     },
@@ -91,7 +95,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': 'INFO',
             'propagate': False,
         },
         'django.db.backends': {
@@ -100,6 +104,16 @@ LOGGING = {
             'propagate': False,
         },
         'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Set to DEBUG to see more details
+            'propagate': False,
+        },
+        'gunicorn.access': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'gunicorn.error': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
