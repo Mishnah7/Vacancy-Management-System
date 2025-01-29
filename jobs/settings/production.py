@@ -18,18 +18,11 @@ if not SECRET_KEY:
     sys.exit(1)
 
 # Configure allowed hosts
-ALLOWED_HOSTS = [
-    'vacancy-management-system-production.up.railway.app',
-    '.up.railway.app',  # Allow all Railway subdomains
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '.railway.app').split(',')
 
 # Database configuration for Railway
-# Construct internal database URL to avoid egress fees
 PGUSER = os.environ.get('PGUSER')
-PGPASSWORD = os.environ.get('POSTGRES_PASSWORD')
+PGPASSWORD = os.environ.get('PGPASSWORD')  # Changed from POSTGRES_PASSWORD
 PGHOST = os.environ.get('PGHOST')
 PGPORT = os.environ.get('PGPORT')
 PGDATABASE = os.environ.get('PGDATABASE')
@@ -46,7 +39,7 @@ else:
 DATABASES = {
     'default': dj_database_url.config(
         default=database_url,
-        conn_max_age=60,  # Reduced from 600 to improve reliability
+        conn_max_age=60,
         conn_health_checks=True,
         engine='django.db.backends.postgresql'
     )
@@ -61,7 +54,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
-# Security settings - make them configurable
+# Security settings
 SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True') == 'True'
 SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'True') == 'True'
 CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'True') == 'True'
@@ -72,8 +65,7 @@ X_FRAME_OPTIONS = 'DENY'
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
-    'https://vacancy-management-system-production.up.railway.app',
-    'https://*.up.railway.app',  # Allow all Railway subdomains
+    'https://*.railway.app',  # Allow all Railway subdomains
 ]
 
 # Logging configuration
