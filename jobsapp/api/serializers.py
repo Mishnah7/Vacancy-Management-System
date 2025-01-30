@@ -41,7 +41,12 @@ class DashboardJobSerializer(serializers.ModelSerializer):
 
 
 class NewJobSerializer(serializers.ModelSerializer):
-    user = UserSerializer(default=serializers.CurrentUserDefault())
+    user = UserSerializer(read_only=True)
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user'] = user
+        return super().create(validated_data)
 
     class Meta:
         model = Job

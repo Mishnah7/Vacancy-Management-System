@@ -310,6 +310,29 @@ class JobAdmin(admin.ModelAdmin):
             obj.user = request.user
         super().save_model(request, obj, form, change)
 
+    def has_delete_permission(self, request, obj=None):
+        # Superusers can delete any job
+        if request.user.is_superuser:
+            return True
+            
+        # If no specific object is being checked, allow access to the delete action in general
+        if obj is None:
+            return True
+            
+        # For a specific object, only allow if user is the job creator
+        return obj is not None and obj.user == request.user and request.user.is_employer()
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # If superuser, show all jobs
+        if request.user.is_superuser:
+            return qs
+        # For employers, only show their own jobs
+        if request.user.is_employer():
+            return qs.filter(user=request.user)
+        # For other users, show no jobs
+        return qs.none()
+
 @admin.register(Applicant)
 class ApplicantAdmin(admin.ModelAdmin):
     list_display = ('user', 'job', 'created_at', 'status')

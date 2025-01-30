@@ -11,12 +11,15 @@ from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 import bleach
 from django.core.exceptions import ValidationError
+import logging
 
 from accounts.forms import EmployerProfileUpdateForm
 from jobsapp.decorators import user_is_employer
 from jobsapp.forms import CreateJobForm
 from jobsapp.models import Applicant, Job
 from tags.models import Tag
+
+logger = logging.getLogger(__name__)
 
 
 def sanitize_html(html_content):
@@ -52,6 +55,9 @@ class DashboardView(ListView):
     @method_decorator(login_required(login_url=reverse_lazy("accounts:login")))
     @method_decorator(user_is_employer)
     def dispatch(self, request, *args, **kwargs):
+        logger.info(f"Dashboard accessed by user {request.user.id}")
+        logger.info(f"User role: {request.user.role}")
+        logger.info(f"User is authenticated: {request.user.is_authenticated}")
         return super().dispatch(self.request, *args, **kwargs)
 
     def get_queryset(self):
@@ -134,13 +140,14 @@ class JobCreateView(CreateView):
 
     def form_valid(self, form):
         try:
+            form.instance.user = self.request.user
             cleaned_data = form.cleaned_data
             
             # Clean and sanitize HTML content
             if cleaned_data.get('description'):
-                cleaned_data['description'] = sanitize_html(cleaned_data['description'])
+                form.instance.description = sanitize_html(cleaned_data['description'])
             if cleaned_data.get('company_description'):
-                cleaned_data['company_description'] = sanitize_html(cleaned_data['company_description'])
+                form.instance.company_description = sanitize_html(cleaned_data['company_description'])
             
             # Validate required fields for external postings
             if cleaned_data.get('posting_type') in ['external', 'both']:
@@ -148,44 +155,28 @@ class JobCreateView(CreateView):
                     form.add_error('company_name', 'Company name is required for external job postings')
                     return self.form_invalid(form)
             
-            # Create job using manager method
-            job = Job.objects.create_job(
-                user=self.request.user,
-                title=cleaned_data['title'],
-                description=cleaned_data['description'],
-                location=cleaned_data.get('location'),
-                type=cleaned_data.get('type'),
-                category=cleaned_data.get('category'),
-                last_date=cleaned_data.get('last_date'),
-                company_name=cleaned_data.get('company_name'),
-                company_description=cleaned_data.get('company_description'),
-                website=cleaned_data.get('website'),
-                salary=cleaned_data.get('salary'),
-                vacancy=cleaned_data.get('vacancy', 1),
-                posting_type=cleaned_data.get('posting_type', 'external')
-            )
+            # Save the form
+            self.object = form.save()
             
-            # Add tags
+            # Add tags if present
             if cleaned_data.get('tags'):
-                job.tags.set(cleaned_data['tags'])
+                self.object.tags.set(cleaned_data['tags'])
             
-            messages.success(self.request, "Job position created successfully!")
+            messages.success(self.request, 'Job position created successfully!')
             return HttpResponseRedirect(self.get_success_url())
             
         except ValidationError as e:
-            if hasattr(e, 'message_dict'):
-                for field, errors in e.message_dict.items():
-                    for error in errors:
-                        form.add_error(field, error)
-            else:
-                form.add_error(None, str(e))
+            messages.error(self.request, str(e))
             return self.form_invalid(form)
-            
         except Exception as e:
-            messages.error(self.request, f"An unexpected error occurred: {str(e)}")
+            messages.error(self.request, 'An unexpected error occurred while creating the job position. Please try again.')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
+        # Clear any existing messages to prevent duplicates
+        storage = messages.get_messages(self.request)
+        storage.used = True
+        
         for field, errors in form.errors.items():
             for error in errors:
                 if field == '__all__':
