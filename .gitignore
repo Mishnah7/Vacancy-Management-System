@@ -32,3 +32,4 @@ staticfiles/
 # Misc
 .DS_Store
 Thumbs.db
+.venv/
