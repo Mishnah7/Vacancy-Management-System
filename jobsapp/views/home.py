@@ -4,7 +4,7 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpRespons
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DetailView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView, FormView
 from django.core.cache import cache
 from django.db.models import Q
 
@@ -25,12 +25,13 @@ class SupportView(TemplateView):
     template_name = "jobs/support.html"
 
 
-class ContactView(CreateView):
+class ContactView(FormView):
     template_name = "jobs/contact.html"
     form_class = ContactForm
     success_url = reverse_lazy('jobs:contact')
 
     def form_valid(self, form):
+        # Process the form data here (e.g., send email)
         messages.success(self.request, "Your message has been sent successfully!")
         return super().form_valid(form)
 
@@ -42,9 +43,10 @@ class HomeView(ListView):
 
     def get_queryset(self):
         base_queryset = self.model.objects.filter(
-            last_date__gte=timezone.now()
+            last_date__gte=timezone.now(),
+            filled=False  # Only show unfilled jobs
         ).select_related(
-            'user'
+            'user', 'category'  # Optimize queries
         ).prefetch_related(
             'tags', 'applicants'
         )
@@ -67,28 +69,34 @@ class HomeView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        base_queryset = self.model.objects.filter(
-            last_date__gte=timezone.now(),
-            created_at__month=timezone.now().month
-        ).select_related('user').prefetch_related('tags')
+        
+        # Get trending jobs with proper caching
+        cache_key = f'trending_jobs_{self.request.user.id if self.request.user.is_authenticated else "anon"}'
+        trending_jobs = cache.get(cache_key)
+        
+        if trending_jobs is None:
+            base_queryset = self.model.objects.filter(
+                last_date__gte=timezone.now(),
+                filled=False,
+                created_at__month=timezone.now().month
+            ).select_related('user', 'category').prefetch_related('tags')
 
-        if self.request.user.is_authenticated:
-            if self.request.user.role == 'employer':
-                trending_jobs = base_queryset[:3]
+            if self.request.user.is_authenticated:
+                if self.request.user.role == 'employer':
+                    trending_jobs = base_queryset[:3]
+                else:
+                    try:
+                        EmployeeProfile.objects.get(user=self.request.user)
+                        trending_jobs = base_queryset.filter(posting_type__in=['internal', 'both'])[:3]
+                    except EmployeeProfile.DoesNotExist:
+                        trending_jobs = base_queryset.filter(posting_type__in=['external', 'both'])[:3]
             else:
-                try:
-                    EmployeeProfile.objects.get(user=self.request.user)
-                    trending_jobs = base_queryset.filter(posting_type__in=['internal', 'both'])[:3]
-                except EmployeeProfile.DoesNotExist:
-                    trending_jobs = base_queryset.filter(posting_type__in=['external', 'both'])[:3]
-        else:
-            trending_jobs = base_queryset.filter(posting_type='external')[:3]
-
-        context["trendings"] = cache.get_or_set(
-            'trending_jobs',
-            trending_jobs,
-            3600  # 1 hour cache
-        )
+                trending_jobs = base_queryset.filter(posting_type='external')[:3]
+            
+            # Cache for 1 hour
+            cache.set(cache_key, trending_jobs, 3600)
+        
+        context["trendings"] = trending_jobs
         return context
 
 
@@ -137,6 +145,7 @@ class SearchView(ListView):
         context["q"] = self.request.GET.get("q", "")
         context["l"] = self.request.GET.get("l", "")
         context["total_jobs"] = self.get_queryset().count()
+        context["today"] = timezone.now()
         return context
 
 
@@ -204,6 +213,12 @@ class JobDetailsView(DetailView):
     def get(self, request, *args, **kwargs):
         try:
             self.object = self.get_object()
+            # If user is an employer, they can view any job they posted
+            if request.user.is_authenticated and request.user.role == 'employer':
+                if self.object.user == request.user:
+                    context = self.get_context_data(object=self.object)
+                    return self.render_to_response(context)
+            
             # Check if the job is internal only and user is not an internal employee
             if self.object.posting_type == 'internal':
                 if not request.user.is_authenticated:

@@ -174,29 +174,54 @@
                     <h2 class="mb-4">Send us a Message</h2>
                     <form class="contact-form" method="post" action="{% url 'jobs:contact' %}">
                         {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">Full Name</label>
-                                    <input type="text" name="name" class="form-control" required>
+                                    <label class="form-label" for="{{ form.name.id_for_label }}">Full Name</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="form-label">Email Address</label>
-                                    <input type="email" name="email" class="form-control" required>
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">Email Address</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.email.errors }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-group">
-                                    <label class="form-label">Subject</label>
-                                    <input type="text" name="subject" class="form-control" required>
+                                    <label class="form-label" for="{{ form.subject.id_for_label }}">Subject</label>
+                                    {{ form.subject }}
+                                    {% if form.subject.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.subject.errors }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-group">
-                                    <label class="form-label">Message</label>
-                                    <textarea name="message" class="form-control" required></textarea>
+                                    <label class="form-label" for="{{ form.message.id_for_label }}">Message</label>
+                                    {{ form.message }}
+                                    {% if form.message.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.message.errors }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-12">

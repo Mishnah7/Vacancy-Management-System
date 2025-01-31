@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django_ratelimit.decorators import ratelimit
+from django.contrib import messages
 
 from jobsapp.decorators import user_is_employee
 
@@ -54,15 +55,31 @@ class ResumeCVCreateView(LoginRequiredMixin, EmployeeRequiredMixin, View):
     """
     Create resume/cv
     """
-
+    login_url = reverse_lazy('accounts:login')  # Redirect to login if not authenticated
     form_class = ResumeCvForm
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            messages.error(self.request, "Please log in to create a resume.")
+            return redirect(self.login_url)
+        messages.error(self.request, "Only employees can create resumes.")
+        return redirect(reverse_lazy("jobs:home"))
 
     def post(self, request):
         try:
+            if not request.user.is_authenticated:
+                messages.error(request, "Please log in to create a resume.")
+                return redirect(self.login_url)
+            
+            if request.user.role != "employee":
+                messages.error(request, "Only employees can create resumes.")
+                return redirect(reverse_lazy("jobs:home"))
+            
             template_id = request.POST.get('template')
             name = request.POST.get('name')
             
             if not template_id or not name:
+                messages.error(request, "Please select a template and provide a name for your resume.")
                 return redirect(reverse_lazy("resume_cv:templates"))
             
             template = ResumeCvTemplate.objects.get(id=template_id)
@@ -76,9 +93,15 @@ class ResumeCVCreateView(LoginRequiredMixin, EmployeeRequiredMixin, View):
                 style=template.style
             )
             
+            messages.success(request, "Resume created successfully!")
             return redirect(reverse_lazy("resume_cv:builder", kwargs={"code": resume.code}))
-        except (ResumeCvTemplate.DoesNotExist, Exception) as e:
-            print(f"Error creating resume: {str(e)}")
+            
+        except ResumeCvTemplate.DoesNotExist:
+            messages.error(request, "Selected template does not exist.")
+            return redirect(reverse_lazy("resume_cv:templates"))
+        except Exception as e:
+            logger.error(f"Error creating resume: {str(e)}")
+            messages.error(request, "An error occurred while creating your resume. Please try again.")
             return redirect(reverse_lazy("resume_cv:templates"))
 
 
