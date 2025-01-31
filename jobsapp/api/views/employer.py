@@ -13,6 +13,9 @@ import logging
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.contrib.auth import get_user_model
+import traceback
 
 from jobsapp.api.permissions import IsEmployer, IsJobCreator
 from jobsapp.api.serializers import ApplicantSerializer, DashboardJobSerializer, NewJobSerializer
@@ -81,54 +84,63 @@ class JobDeleteAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer, IsJobCreator]
     
     def delete(self, request, job_id):
+        """Delete a job posting with proper error handling and logging."""
         logger.info("="*50)
-        logger.info("JOB DELETION ATTEMPT")
-        logger.info("="*50)
+        logger.info(f"Job deletion initiated for job_id: {job_id} by user: {request.user.id}")
         
         try:
-            # Get the job
-            try:
-                job = Job.objects.select_related('user').get(id=job_id)
-                logger.info(f"Job found - ID: {job_id}")
-            except Job.DoesNotExist:
-                logger.warning(f"Job {job_id} not found")
-                return JsonResponse(
-                    {"error": "Job not found"},
-                    status=404
-                )
+            # Attempt to fetch the job with select_related to minimize db queries
+            job = Job.objects.select_related('user').get(id=job_id)
             
-            # Check object permissions
-            if not request.user.is_employer():
-                logger.warning("Permission denied - User is not an employer")
+            # Log permission check
+            logger.info(f"Found job {job_id} owned by user {job.user.id}")
+            
+            # Check if user has permission (this is also handled by IsJobCreator, but we log it)
+            if job.user.id != request.user.id:
+                logger.warning(f"Permission denied: User {request.user.id} attempted to delete job {job_id} owned by user {job.user.id}")
                 return JsonResponse(
-                    {"error": "Only employers can delete jobs"},
-                    status=403
-                )
-                
-            if job.user_id != request.user.id:
-                logger.warning("Permission denied - Job owner mismatch")
-                return JsonResponse(
-                    {"error": "You can only delete your own jobs"},
+                    {"error": "You don't have permission to delete this job"}, 
                     status=403
                 )
             
-            # Delete the job
-            logger.info("Permission checks passed, proceeding with deletion")
+            # Store job owner's ID for cache clearing
+            job_owner_id = job.user.id
+            
+            # Perform the deletion
             job.delete()
-            logger.info(f"Job {job_id} deleted successfully")
+            
+            # Clear relevant caches
+            cache.delete(f'trending_jobs_{job_owner_id}')
+            cache.delete('trending_jobs_anon')
+            
+            logger.info(f"Successfully deleted job {job_id} and cleared associated caches")
             logger.info("="*50)
             
+            return JsonResponse({"message": "Job deleted successfully"}, status=200)
+            
+        except Job.DoesNotExist:
+            logger.warning(f"Job deletion failed: Job {job_id} not found")
+            logger.info("="*50)
             return JsonResponse(
-                {"message": "Job deleted successfully"},
-                status=200
+                {"error": "Job not found"}, 
+                status=404
+            )
+            
+        except PermissionDenied as e:
+            logger.warning(f"Permission denied: {str(e)}")
+            logger.info("="*50)
+            return JsonResponse(
+                {"error": "You don't have permission to perform this action"}, 
+                status=403
             )
             
         except Exception as e:
             logger.error("="*50)
-            logger.error("Unexpected error during job deletion")
-            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Unexpected error during job deletion: {type(e).__name__}")
+            logger.error(f"Error details: {str(e)}")
+            logger.error(traceback.format_exc())
             logger.error("="*50)
             return JsonResponse(
-                {"error": "Failed to delete job. Please try again."},
+                {"error": "An unexpected error occurred while deleting the job"}, 
                 status=500
             )

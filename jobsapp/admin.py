@@ -320,7 +320,7 @@ class JobAdmin(admin.ModelAdmin):
             return True
             
         # For a specific object, only allow if user is the job creator
-        return obj is not None and obj.user == request.user and request.user.is_employer()
+        return obj is not None and obj.user == request.user and request.user.role == "employer"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -328,7 +328,7 @@ class JobAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         # For employers, only show their own jobs
-        if request.user.is_employer():
+        if request.user.role == "employer":
             return qs.filter(user=request.user)
         # For other users, show no jobs
         return qs.none()
